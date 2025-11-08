@@ -1,20 +1,17 @@
 import { useState, useEffect } from 'react'
-import { useNavigate, Link } from 'react-router-dom' // Import Link
+import { useNavigate, Link } from 'react-router-dom'
 import axios from '../../api/axios'
 import { toast } from 'react-hot-toast'
 
 export default function AdminDashboard() {
   const navigate = useNavigate()
-  // Add 'manageProducts' to the tab state
   const [activeTab, setActiveTab] = useState('applications')
   const [applications, setApplications] = useState([])
   const [loading, setLoading] = useState(true)
   
-  // State for the product lists
   const [allProducts, setAllProducts] = useState([])
   const [loadingProducts, setLoadingProducts] = useState(false)
 
-  // Add Product Form State
   const [form, setForm] = useState({
     name: '',
     description: '',
@@ -24,7 +21,6 @@ export default function AdminDashboard() {
     imageUrl: ''
   })
 
-  // Fetch applications (this is your existing function)
   const fetchApplications = async () => {
     try {
       const { data } = await axios.get('/admin/vendor/applications')
@@ -36,11 +32,9 @@ export default function AdminDashboard() {
     }
   }
 
-  // NEW: Fetch all products for the 'Manage Products' tab
   const fetchAllProducts = async () => {
     setLoadingProducts(true)
     try {
-      // This is your public route to get all products
       const { data } = await axios.get('/products')
       if (data.success) {
         setAllProducts(data.products)
@@ -52,7 +46,6 @@ export default function AdminDashboard() {
     }
   }
 
-  // Load initial data
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem('user'))
     if (user?.role !== 'admin') {
@@ -60,13 +53,14 @@ export default function AdminDashboard() {
       navigate('/')
       return
     }
-    fetchApplications() // Fetch applications by default
-    fetchAllProducts() // Also fetch all products
+    fetchApplications()
+    fetchAllProducts()
   }, [navigate])
 
   const handleApprove = async (id) => {
     try {
-      await axios.put(`/admin/vendor/${id}`, { approved: true }) // Use correct route from vendorController
+      // This route comes from vendorRoutes.js and hits vendorController.updateVendorStatus
+      await axios.put(`/admin/vendor/${id}`, { approved: true }) 
       toast.success('Application approved!')
       fetchApplications()
     } catch (err) {
@@ -76,7 +70,8 @@ export default function AdminDashboard() {
 
   const handleReject = async (id) => {
     try {
-      await axios.put(`/admin/vendor/${id}`, { approved: false }) // Use correct route from vendorController
+      // This route comes from vendorRoutes.js and hits vendorController.updateVendorStatus
+      await axios.put(`/admin/vendor/${id}`, { approved: false }) 
       toast.success('Application rejected')
       fetchApplications()
     } catch (err) {
@@ -88,7 +83,6 @@ export default function AdminDashboard() {
     setForm({ ...form, [e.target.name]: e.target.value })
   }
 
-  // This is your existing function
   const handleProductSubmit = async e => {
     e.preventDefault()
     try {
@@ -102,13 +96,12 @@ export default function AdminDashboard() {
       setForm({
         name: '', description: '', price: '', stock: '', category: 'Electronics', imageUrl: ''
       })
-      fetchAllProducts() // Re-fetch products after adding a new one
+      fetchAllProducts()
     } catch (err) {
       toast.error('Failed to add product')
     }
   }
 
-  // NEW: Handle deleting a product
   const handleProductDelete = async (id) => {
     if (!window.confirm('Are you sure you want to delete this product?')) {
       return
@@ -116,7 +109,7 @@ export default function AdminDashboard() {
     try {
       await axios.delete(`/products/${id}`)
       toast.success('Product deleted')
-      fetchAllProducts() // Re-fetch products to update the list
+      fetchAllProducts()
     } catch (err) {
       toast.error('Failed to delete product')
     }
@@ -148,7 +141,6 @@ export default function AdminDashboard() {
         >
           Add Product
         </button>
-        {/* NEW 'Manage Products' Tab */}
         <button
           onClick={() => setActiveTab('manageProducts')}
           className={`pb-2 px-4 font-medium ${
@@ -173,22 +165,50 @@ export default function AdminDashboard() {
               {applications.map(app => (
                 <div key={app._id} className="bg-white p-4 rounded-lg shadow border">
                   <div className="flex justify-between items-start">
+                    
+                    {/* === THIS IS THE UPDATED UI BLOCK === */}
                     <div>
-                      <h3 className="font-bold text-lg">{app.name}</h3> {/* User name */}
-                      <p className="text-gray-600">{app.email}</p> {/* User email */}
-                      <p className="font-semibold mt-2">{app.vendorInfo.businessName}</p> {/* Business Name */}
-                      <p className="text-sm text-gray-500 mt-1">{app.vendorInfo.description}</p> {/* Business Description */}
+                      <h3 className="font-bold text-lg">{app.name} ({app.email})</h3>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2 mt-4 text-sm">
+                        <div>
+                          <strong className="text-gray-600">Business Name:</strong>
+                          <p>{app.vendorInfo.businessName}</p>
+                        </div>
+                        <div>
+                          <strong className="text-gray-600">Business Type:</strong>
+                          <p>{app.vendorInfo.businessType}</p>
+                        </div>
+                        <div>
+                          <strong className="text-gray-600">Phone:</strong>
+                          <p>{app.vendorInfo.phoneNumber}</p>
+                        </div>
+                        <div>
+                          <strong className="text-gray-600">Tax ID:</strong>
+                          <p>{app.vendorInfo.taxId}</p>
+                        </div>
+                        <div className="col-span-2">
+                          <strong className="text-gray-600">Address:</strong>
+                          <p>{app.vendorInfo.businessAddress}</p>
+                        </div>
+                        <div className="col-span-2">
+                          <strong className="text-gray-600">Description:</strong>
+                          <p>{app.vendorInfo.description}</p>
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex gap-2">
+                    {/* ===================================== */}
+
+                    <div className="flex flex-col gap-2 flex-shrink-0">
                       <button
                         onClick={() => handleApprove(app._id)}
-                        className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+                        className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 w-full"
                       >
                         ✓ Approve
                       </button>
                       <button
                         onClick={() => handleReject(app._id)}
-                        className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+                        className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 w-full"
                       >
                         ✗ Reject
                       </button>
@@ -201,12 +221,11 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* Add Product Tab (Your existing code) */}
+      {/* Add Product Tab */}
       {activeTab === 'addProduct' && (
         <div>
           <h2 className="text-xl font-semibold mb-4">Add New Product</h2>
           <form onSubmit={handleProductSubmit} className="bg-white p-6 rounded-lg shadow space-y-4 max-w-2xl">
-            {/* ...all your form inputs... */}
              <input
               name="name"
               type="text"
@@ -277,7 +296,7 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* NEW Manage Products Tab */}
+      {/* Manage Products Tab */}
       {activeTab === 'manageProducts' && (
         <div>
           {loadingProducts ? (
@@ -301,7 +320,7 @@ export default function AdminDashboard() {
                   </div>
                   <div className="flex gap-3">
                     <Link
-                      to={`/admin/products/edit/${product._id}`} // <-- Use admin edit route
+                      to={`/admin/products/edit/${product._id}`}
                       className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 font-medium"
                     >
                       Edit

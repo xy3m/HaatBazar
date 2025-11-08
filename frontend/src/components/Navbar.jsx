@@ -1,25 +1,25 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom'
-import { useSelector, useDispatch } from 'react-redux' // 1. Import Redux hooks
+import { useSelector, useDispatch } from 'react-redux' // Import Redux hooks
 import { toast } from 'react-hot-toast'
-import { logoutUser } from '../redux/slices/authSlice' // 2. Import the logout action
+import { logoutUser } from '../redux/slices/authSlice' // Import the logout action
 
 export default function Navbar() {
   const navigate = useNavigate()
   const location = useLocation()
   const dispatch = useDispatch()
 
-  // 3. Get all state from Redux, not local state
+  // Get all state from Redux, not local state
   const { user, isAuthenticated } = useSelector((state) => state.auth)
   const { cartItems } = useSelector((state) => state.cart)
 
   const handleLogout = () => {
-    // 4. Dispatch the Redux logout action
+    // Dispatch the Redux logout action
     dispatch(logoutUser()) 
     toast.success('Logged out successfully')
     navigate('/')
   }
 
-  // 5. Use Redux state for conditional logic
+  // Use Redux state for conditional logic
   if (!isAuthenticated && location.pathname === '/') return null
 
   return (
@@ -31,7 +31,7 @@ export default function Navbar() {
           </Link>
 
           <div className="flex gap-6 items-center">
-            {/* 6. Use Redux state for conditional logic */}
+            {/* Use Redux state for conditional logic */}
             {!isAuthenticated ? (
               <>
                 <Link to="/login" className="hover:text-teal-600">Login</Link>
@@ -57,9 +57,8 @@ export default function Navbar() {
                 {/* Vendor-specific links */}
                 {user.role === 'vendor' && (
                   <>
-                    <Link to="/vendor/products/new" className="bg-teal-600 text-white px-4 py-2 rounded hover:bg-teal-700">
-                      + Add Product
-                    </Link>
+                    {/* === "+ Add Product" LINK REMOVED FROM HERE === */}
+                    
                     <Link to="/vendor/orders" className="hover:text-teal-600 font-medium">
                       My Orders
                     </Link>
@@ -73,6 +72,15 @@ export default function Navbar() {
                 {user.role === 'admin' && (
                   <Link to="/admin/dashboard" className="bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600">
                     Admin Panel
+                  </Link>
+                )}
+
+                {user.role === 'user' && (
+                  <Link 
+                    to="/vendor/apply" 
+                    className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 font-medium"
+                  >
+                    Apply as Vendor
                   </Link>
                 )}
 

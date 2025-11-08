@@ -1,19 +1,28 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
-import Navbar from './components/Navbar'
-import Home from './pages/Home'
-import Login from './pages/Login'
-import Register from './pages/Register'
-import Products from './pages/Products'
-import VendorDashboard from './pages/vendor/VendorDashboard'
-import AddProduct from './pages/vendor/AddProduct'
-import VendorProducts from './pages/vendor/VendorProducts'
-import EditProduct from './pages/vendor/EditProduct' // 1. IMPORT THE COMPONENT
-import AdminDashboard from './pages/admin/AdminDashboard'
-import AdminEditProduct from './pages/admin/AdminEditProduct' // <-- 1. ADD THIS IMPORT
-import Cart from './pages/Cart'
-import MyOrders from './pages/MyOrders'
-import VendorOrders from './pages/vendor/VendorOrders'
+
+// Component Imports
+import Navbar from './components/Navbar.jsx'
+
+// Page Imports (User)
+import Home from './pages/Home.jsx'
+import Login from './pages/Login.jsx'
+import Register from './pages/Register.jsx'
+import Products from './pages/Products.jsx'
+import Cart from './pages/Cart.jsx'
+import MyOrders from './pages/MyOrders.jsx'
+
+// Page Imports (Vendor)
+import VendorDashboard from './pages/vendor/VendorDashboard.jsx'
+import AddProduct from './pages/vendor/AddProduct.jsx'
+import VendorProducts from './pages/vendor/VendorProducts.jsx'
+import EditProduct from './pages/vendor/EditProduct.jsx'
+import VendorOrders from './pages/vendor/VendorOrders.jsx'
+import VendorApplication from './pages/vendor/VendorApplication.jsx'
+
+// Page Imports (Admin)
+import AdminDashboard from './pages/admin/AdminDashboard.jsx'
+import AdminEditProduct from './pages/admin/AdminEditProduct.jsx'
 
 function App() {
   return (
@@ -35,6 +44,7 @@ function App() {
         <Route path="/cart" element={<Cart />} />
         <Route path="/orders/me" element={<MyOrders />} />
         <Route path="/vendor/orders" element={<VendorOrders />} />
+        <Route path="/vendor/apply" element={<VendorApplication />} /> {/* 2. ADD THIS ROUTE */}
       </Routes>
     </BrowserRouter>
   )
