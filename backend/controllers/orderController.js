@@ -154,3 +154,17 @@ exports.vendorOrders = catchAsyncErrors(async (req, res, next) => {
     orders
   });
 });
+
+exports.clearDeliveredOrders = catchAsyncErrors(async (req, res, next) => {
+  
+  // We find all orders that belong to this vendor AND are 'Delivered'
+  await Order.deleteMany({
+    'orderItems.vendor': req.user._id, // Only clear for this user
+    orderStatus: 'Delivered'         // Only clear if delivered
+  });
+
+  res.status(200).json({
+    success: true,
+    message: 'Delivered order history cleared'
+  });
+});

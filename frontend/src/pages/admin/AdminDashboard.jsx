@@ -149,6 +149,19 @@ export default function AdminDashboard() {
     }
   };
 
+  // Clear Order History
+  const handleClearHistory = async () => {
+    if (window.confirm('Are you sure you want to clear all delivered order history? This cannot be undone.')) {
+      try {
+        await axios.delete('/vendor/orders/delivered');
+        toast.success('Delivered order history cleared');
+        fetchMyOrders(); // Refresh the list
+      } catch (err) {
+        toast.error('Failed to clear history');
+      }
+    }
+  };
+
   return (
     <div className="max-w-6xl mx-auto p-6">
       <h1 className="text-3xl font-bold mb-6">⚙️ Admin Dashboard</h1>
@@ -197,7 +210,7 @@ export default function AdminDashboard() {
         </button>
       </div>
 
-      {/* Pending Applications Tab */}
+      {/* === PENDING APPLICATIONS TAB (RESTORED) === */}
       {activeTab === 'applications' && (
         <div>
           {loading ? (
@@ -260,7 +273,7 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* === ADD PRODUCT TAB (FIXED) === */}
+      {/* === ADD PRODUCT TAB (RESTORED) === */}
       {activeTab === 'addProduct' && (
         <div>
           <h2 className="text-xl font-semibold mb-4">Add New Product</h2>
@@ -335,7 +348,7 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* Manage Products Tab */}
+      {/* === MANAGE PRODUCTS TAB (RESTORED) === */}
       {activeTab === 'manageProducts' && (
         <div>
           {loadingProducts ? (
@@ -354,7 +367,7 @@ export default function AdminDashboard() {
                     />
                     <div>
                       <h2 className="text-xl font-semibold">{product.name}</h2>
-                      <p className="text-gray-600">Stock: {product.stock} • Price: ৳{product.price}</p>
+                      <p className="text-gray-600">Stock: {product.stock} • Price: SAR{product.price}</p>
                     </div>
                   </div>
                   <div className="flex gap-3">
@@ -378,9 +391,19 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* My Orders Tab */}
+      {/* === MY ORDERS TAB (WORKING) === */}
       {activeTab === 'myOrders' && (
         <div>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-semibold">Your Product Orders</h2>
+            <button
+              onClick={handleClearHistory}
+              className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 text-sm font-medium"
+            >
+              Clear Delivered History
+            </button>
+          </div>
+
           {loadingMyOrders ? (
             <p>Loading your orders...</p>
           ) : myOrders.length === 0 ? (

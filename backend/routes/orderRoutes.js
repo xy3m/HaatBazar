@@ -9,7 +9,8 @@ const {
   allOrders,
   updateOrder,
   deleteOrder,
-  vendorOrders
+  vendorOrders,
+  clearDeliveredOrders
 } = require('../controllers/orderController');
 
 const { isAuthenticatedUser, authorizeRoles } = require('../middleware/auth');
@@ -21,7 +22,7 @@ router.get('/orders/me', isAuthenticatedUser, myOrders);
 
 // Vendor routes
 router.get('/vendor/orders', isAuthenticatedUser, authorizeRoles('vendor', 'admin'), vendorOrders);
-
+router.delete('/vendor/orders/delivered', isAuthenticatedUser, authorizeRoles('vendor', 'admin'), clearDeliveredOrders);
 // Admin routes
 router.get('/admin/orders', isAuthenticatedUser, authorizeRoles('admin'), allOrders);
 router.put('/admin/order/:id', isAuthenticatedUser, authorizeRoles('admin', 'vendor'), updateOrder);
