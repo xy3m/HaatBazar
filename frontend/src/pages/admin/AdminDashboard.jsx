@@ -16,6 +16,9 @@ export default function AdminDashboard() {
   const [myOrders, setMyOrders] = useState([])
   const [loadingMyOrders, setLoadingMyOrders] = useState(false)
 
+  const [users, setUsers] = useState([])
+  const [loadingUsers, setLoadingUsers] = useState(true)
+
   const { user } = useSelector(state => state.auth)
 
   const [form, setForm] = useState({
@@ -27,8 +30,22 @@ export default function AdminDashboard() {
     imageUrl: ''
   })
 
+  // --- Function to fetch all users ---
+  const fetchUsers = async () => {
+    setLoadingUsers(true);
+    try {
+      const { data } = await axios.get('/admin/users'); 
+      setUsers(data.users || []);
+    } catch (err) {
+      toast.error('Failed to fetch users');
+    } finally {
+      setLoadingUsers(false);
+    }
+  };
+
   // Fetch pending applications
   const fetchApplications = async () => {
+    setLoading(true);
     try {
       const { data } = await axios.get('/admin/vendor/applications')
       setApplications(data.applications || [])
@@ -54,7 +71,7 @@ export default function AdminDashboard() {
     }
   }
 
-  // Fetch "My Orders"
+  // Fetch "Received Orders"
   const fetchMyOrders = async () => {
     setLoadingMyOrders(true)
     try {
@@ -77,9 +94,23 @@ export default function AdminDashboard() {
     fetchApplications()
     fetchAllProducts()
     fetchMyOrders()
+    fetchUsers() 
   }, [navigate, user])
 
-  // Approve/Reject Vendor
+  // --- Function to delete a user ---
+  const handleDeleteUser = async (id) => {
+    if (window.confirm('Are you sure you want to delete this user? This is permanent.')) {
+      try {
+        await axios.delete(`/admin/user/${id}`);
+        toast.success('User deleted successfully');
+        fetchUsers(); 
+      } catch (err) {
+        toast.error('Failed to delete user');
+      }
+    }
+  };
+
+  // --- (All other handler functions) ---
   const handleApprove = async (id) => {
     try {
       await axios.put(`/admin/vendor/${id}`, { approved: true }) 
@@ -100,7 +131,6 @@ export default function AdminDashboard() {
     }
   }
 
-  // Add Product
   const handleProductChange = e => {
     setForm({ ...form, [e.target.name]: e.target.value })
   }
@@ -124,7 +154,6 @@ export default function AdminDashboard() {
     }
   }
 
-  // Delete Product
   const handleProductDelete = async (id) => {
     if (!window.confirm('Are you sure you want to delete this product?')) {
       return
@@ -138,7 +167,6 @@ export default function AdminDashboard() {
     }
   }
 
-  // Update Order Status
   const handleStatusChange = async (orderId, newStatus) => {
     try {
       await axios.put(`/admin/order/${orderId}`, { orderStatus: newStatus });
@@ -149,13 +177,12 @@ export default function AdminDashboard() {
     }
   };
 
-  // Clear Order History
   const handleClearHistory = async () => {
     if (window.confirm('Are you sure you want to clear all delivered order history? This cannot be undone.')) {
       try {
         await axios.delete('/vendor/orders/delivered');
         toast.success('Delivered order history cleared');
-        fetchMyOrders(); // Refresh the list
+        fetchMyOrders(); 
       } catch (err) {
         toast.error('Failed to clear history');
       }
@@ -206,7 +233,18 @@ export default function AdminDashboard() {
               : 'text-gray-600'
           }`}
         >
-          My Orders
+          Received Orders
+        </button>
+        
+        <button
+          onClick={() => setActiveTab('manageUsers')}
+          className={`pb-2 px-4 font-medium ${
+            activeTab === 'manageUsers'
+              ? 'border-b-2 border-teal-600 text-teal-600'
+              : 'text-gray-600'
+          }`}
+        >
+          Manage Users
         </button>
       </div>
 
@@ -367,7 +405,7 @@ export default function AdminDashboard() {
                     />
                     <div>
                       <h2 className="text-xl font-semibold">{product.name}</h2>
-                      <p className="text-gray-600">Stock: {product.stock} • Price: SAR{product.price}</p>
+                      <p className="text-gray-600">Stock: {product.stock} • Price: ৳{product.price}</p>
                     </div>
                   </div>
                   <div className="flex gap-3">
@@ -391,11 +429,11 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* === MY ORDERS TAB (WORKING) === */}
+      {/* === RECEIVED ORDERS TAB (RESTORED) === */}
       {activeTab === 'myOrders' && (
         <div>
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold">Your Product Orders</h2>
+            <h2 className="text-xl font-semibold">Received Product Orders</h2>
             <button
               onClick={handleClearHistory}
               className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 text-sm font-medium"
@@ -403,7 +441,6 @@ export default function AdminDashboard() {
               Clear Delivered History
             </button>
           </div>
-
           {loadingMyOrders ? (
             <p>Loading your orders...</p>
           ) : myOrders.length === 0 ? (
@@ -417,7 +454,6 @@ export default function AdminDashboard() {
                     <p><strong>Customer:</strong> {order.user.name} ({order.user.email})</p>
                     <p><strong>Status:</strong> <span className="font-semibold">{order.orderStatus}</span></p>
                   </div>
-                  
                   <h4 className="font-semibold mt-2">Your Items in this Order:</h4>
                   {order.orderItems
                     .filter(item => item.vendor === user._id) 
@@ -427,7 +463,6 @@ export default function AdminDashboard() {
                         <p>৳{item.price * item.quantity}</p>
                       </div>
                   ))}
-                  
                   {order.orderStatus !== 'Delivered' && (
                     <div className="flex gap-2 mt-4">
                       <button
@@ -449,6 +484,40 @@ export default function AdminDashboard() {
                         Deliver
                       </button>
                     </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* === MANAGE USERS TAB (RESTORED) === */}
+      {activeTab === 'manageUsers' && (
+        <div>
+          <h2 className="text-xl font-semibold mb-4">Manage All Users</h2>
+          {loadingUsers ? (
+            <p>Loading users...</p>
+          ) : (
+            <div className="space-y-4">
+              {users.map(u => (
+                <div key={u._id} className="bg-white p-4 rounded-lg shadow-md flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div>
+                      <h3 className="font-semibold">{u.name}</h3>
+                      <p className="text-sm text-gray-600">{u.email}</p>
+                      <span className="text-xs font-medium bg-gray-200 text-gray-800 px-2 py-0.5 rounded-full">
+                        {u.role}
+                      </span>
+                    </div>
+                  </div>
+                  {user._id !== u._id && (
+                    <button
+                      onClick={() => handleDeleteUser(u._id)}
+                      className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 font-medium"
+                    >
+                      Delete
+                    </button>
                   )}
                 </div>
               ))}

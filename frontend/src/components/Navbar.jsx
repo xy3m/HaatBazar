@@ -17,7 +17,6 @@ export default function Navbar() {
     navigate('/')
   }
 
-  // If user is not authenticated AND is on the homepage, show nothing
   if (!isAuthenticated && location.pathname === '/') return null
 
   return (
@@ -25,13 +24,11 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 py-4">
         <div className="flex justify-between items-center">
           
-          {/* Logo link: Goes to dashboard if logged in, homepage if not */}
           <Link to={isAuthenticated ? '/dashboard' : '/'} className="text-2xl font-bold text-teal-600">
             🛒 HaatBazar
           </Link>
 
           <div className="flex gap-6 items-center">
-            {/* Logged-out state: Show Login/Register */}
             {!isAuthenticated ? (
               <>
                 <Link to="/login" className="hover:text-teal-600">Login</Link>
@@ -40,14 +37,11 @@ export default function Navbar() {
                 </Link>
               </>
             ) : (
-              // Logged-in state: Show dashboard links
               <>
-                {/* "Shop" link now goes to the dashboard */}
                 <Link to="/dashboard" className="hover:text-teal-600 font-medium">
                   Shop
                 </Link>
 
-                {/* Cart link */}
                 <Link to="/cart" className="relative hover:text-teal-600 font-medium">
                   🛒 Cart
                   {cartItems.length > 0 && (
@@ -57,11 +51,19 @@ export default function Navbar() {
                   )}
                 </Link>
 
-                {/* Vendor-specific links */}
+                {/* === NEW: "HISTORY" LINK FOR ALL LOGGED-IN USERS === */}
+                <Link 
+                  to="/orders/me" 
+                  className="hover:text-teal-600 font-medium"
+                >
+                  History
+                </Link>
+
+                {/* === VENDOR LINKS (RENAMED) === */}
                 {user.role === 'vendor' && (
                   <>
                     <Link to="/vendor/orders" className="hover:text-teal-600 font-medium">
-                      My Orders
+                      Received Orders
                     </Link>
                     <Link to="/vendor/dashboard" className="hover:text-teal-600 font-medium">
                       My Store
@@ -76,15 +78,10 @@ export default function Navbar() {
                   </Link>
                 )}
 
-                {/* User-specific links */}
+                {/* === USER LINKS (UPDATED) === */}
                 {user.role === 'user' && (
                   <>
-                    <Link 
-                      to="/orders/me" 
-                      className="hover:text-teal-600 font-medium"
-                    >
-                      My Orders
-                    </Link>
+                    {/* "My Orders" was removed and replaced by the global "History" link */}
                     <Link 
                       to="/vendor/apply" 
                       className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 font-medium"
@@ -94,7 +91,6 @@ export default function Navbar() {
                   </>
                 )}
 
-                {/* User info and Logout */}
                 <span className="text-gray-600">Hi, {user.name}</span>
                 <button 
                   onClick={handleLogout}

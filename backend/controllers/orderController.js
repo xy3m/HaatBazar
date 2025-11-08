@@ -4,6 +4,24 @@ const Product = require('../models/productModel');
 const ErrorHandler = require('../utils/errorHandler');
 const catchAsyncErrors = require('../middleware/catchAsyncErrors');
 
+// --- THIS IS THE HELPER FUNCTION ---
+// We move it here so newOrder can use it.
+async function updateStock(productId, quantity) {
+  const product = await Product.findById(productId);
+
+  // Check if the product exists
+  if (product) {
+    product.stock -= quantity;
+    
+    if (product.stock <= 0) {
+      product.stock = 0; // Ensure stock doesn't go negative
+      product.status = 'out-of-stock';
+    }
+    
+    await product.save({ validateBeforeSave: false });
+  }
+}
+
 // Create new order => /api/v1/order/new
 exports.newOrder = catchAsyncErrors(async (req, res, next) => {
   const {
@@ -16,6 +34,17 @@ exports.newOrder = catchAsyncErrors(async (req, res, next) => {
     paymentInfo
   } = req.body;
 
+  // --- 1. CHECK STOCK BEFORE CREATING ORDER ---
+  for (const item of orderItems) {
+    const product = await Product.findById(item.product);
+    if (!product) {
+      return next(new ErrorHandler(`Product not found: ${item.name}`, 404));
+    }
+    if (product.stock < item.quantity) {
+      return next(new ErrorHandler(`Insufficient stock for ${product.name}`, 400));
+    }
+  }
+
   const order = await Order.create({
     orderItems,
     shippingInfo,
@@ -27,6 +56,11 @@ exports.newOrder = catchAsyncErrors(async (req, res, next) => {
     paidAt: paymentInfo.status === 'success' ? Date.now() : null,
     user: req.user._id
   });
+
+  // --- 2. UPDATE STOCK IMMEDIATELY ---
+  for (const item of order.orderItems) {
+    await updateStock(item.product, item.quantity);
+  }
 
   res.status(201).json({
     success: true,
@@ -90,17 +124,14 @@ exports.updateOrder = catchAsyncErrors(async (req, res, next) => {
     return next(new ErrorHandler('Order already delivered', 400));
   }
 
-  // Update stock for each product
+  // --- 3. STOCK LOGIC IS REMOVED FROM HERE ---
+  // (We only update the deliveredAt timestamp)
   if (req.body.orderStatus === 'Delivered') {
-    for (const item of order.orderItems) {
-      await updateStock(item.product, item.quantity);
-    }
     order.deliveredAt = Date.now();
   }
 
   order.orderStatus = req.body.orderStatus;
   
-  // Add to status timeline
   order.statusTimeline.push({
     status: req.body.orderStatus,
     timestamp: Date.now(),
@@ -114,17 +145,6 @@ exports.updateOrder = catchAsyncErrors(async (req, res, next) => {
     order
   });
 });
-
-async function updateStock(productId, quantity) {
-  const product = await Product.findById(productId);
-  product.stock -= quantity;
-  
-  if (product.stock <= 0) {
-    product.status = 'out-of-stock';
-  }
-  
-  await product.save({ validateBeforeSave: false });
-}
 
 // Delete order => /api/v1/admin/order/:id
 exports.deleteOrder = catchAsyncErrors(async (req, res, next) => {
@@ -155,12 +175,11 @@ exports.vendorOrders = catchAsyncErrors(async (req, res, next) => {
   });
 });
 
+// Clear all DELIVERED orders for the logged-in vendor/admin
 exports.clearDeliveredOrders = catchAsyncErrors(async (req, res, next) => {
-  
-  // We find all orders that belong to this vendor AND are 'Delivered'
   await Order.deleteMany({
-    'orderItems.vendor': req.user._id, // Only clear for this user
-    orderStatus: 'Delivered'         // Only clear if delivered
+    'orderItems.vendor': req.user._id,
+    orderStatus: 'Delivered'
   });
 
   res.status(200).json({

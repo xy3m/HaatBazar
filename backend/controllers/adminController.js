@@ -73,6 +73,7 @@ exports.updateUserRole = async (req, res) => {
   }
 };
 
+
 // Delete user
 exports.deleteUser = async (req, res) => {
   try {
@@ -85,6 +86,7 @@ exports.deleteUser = async (req, res) => {
       });
     }
     
+    // We only delete the user from the database
     await user.deleteOne();
     
     res.status(200).json({
