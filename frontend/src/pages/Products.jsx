@@ -18,20 +18,14 @@ export default function Products() {
     fetchProducts()
   }, [categoryQuery]) 
 
-  // --- THIS FUNCTION IS NOW FIXED ---
   const fetchProducts = async () => {
     setLoading(true)
     try {
-      // 1. Create a params object
       const params = {}
       if (categoryQuery) {
-        params.category = categoryQuery // e.g., { category: "Home & Kitchen" }
+        params.category = categoryQuery
       }
-
-      // 2. Pass the params object to axios. 
-      //    axios will automatically encode it correctly.
       const { data } = await axios.get('/products', { params: params })
-      
       setProducts(data.products || [])
     } catch (err) {
       console.error(err)
@@ -98,6 +92,10 @@ export default function Products() {
                 />
                 <div className="p-4">
                   <h3 className="font-bold text-lg mb-2 line-clamp-1">{product.name}</h3>
+                  {/* === ADDED THIS LINE === */}
+                  <p className="text-sm text-gray-500 mb-2">
+                    Sold by: {product.vendor?.name || 'HaatBazar'}
+                  </p>
                   <p className="text-gray-600 text-sm mb-3 line-clamp-2">{product.description}</p>
                   <div className="flex justify-between items-center">
                     <span className="text-teal-600 font-bold text-2xl">৳{product.price}</span>

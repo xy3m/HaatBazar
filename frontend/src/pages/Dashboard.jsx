@@ -4,7 +4,6 @@ import axios from '../api/axios'
 import { 
   FaPlug, FaTshirt, FaBook, FaBlender, FaTags, FaUtensils
 } from 'react-icons/fa'
-// 1. --- ADD REDUX/TOAST IMPORTS ---
 import { useDispatch } from 'react-redux'
 import { addItemToCart } from '../redux/slices/cartSlice'
 import { toast } from 'react-hot-toast'
@@ -23,7 +22,6 @@ export default function Dashboard() {
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
   const navigate = useNavigate()
-  // 2. --- INITIALIZE DISPATCH ---
   const dispatch = useDispatch()
 
   useEffect(() => {
@@ -46,7 +44,7 @@ export default function Dashboard() {
     navigate(`/products?category=${encodeURIComponent(categoryName)}`)
   }
 
-  // 3. --- ADD THE 'ADD TO CART' HANDLER FUNCTION ---
+  // ADD THE 'ADD TO CART' HANDLER FUNCTION
   const handleAddToCart = (product) => {
     if (product.stock === 0) {
       toast.error('Sorry, this product is out of stock');
@@ -91,9 +89,12 @@ export default function Dashboard() {
                     alt={product.name}
                     className="w-full h-56 object-cover"
                   />
-                  {/* 4. --- UPDATED THIS CARD'S BODY --- */}
                   <div className="p-4">
                     <h3 className="font-bold text-lg mb-2 line-clamp-1">{product.name}</h3>
+                    {/* === ADDED THIS LINE === */}
+                    <p className="text-sm text-gray-500 mb-2">
+                      Sold by: {product.vendor?.name || 'HaatBazar'}
+                    </p>
                     <div className="flex justify-between items-center">
                       <span className="text-teal-600 font-bold text-2xl">৳{product.price}</span>
                       <button 
@@ -116,4 +117,4 @@ export default function Dashboard() {
       </div>
     </div>
   )
-}   
+}

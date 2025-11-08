@@ -31,7 +31,6 @@ exports.updateProduct = async (req, res, next) => {
 }
 
 // Delete Product
-// Delete Product
 exports.deleteProduct = async (req, res, next) => {
   try {
     const product = await Product.findById(req.params.id)
@@ -41,9 +40,7 @@ exports.deleteProduct = async (req, res, next) => {
     if (req.user.role === 'vendor' && product.vendor.toString() !== req.user._id.toString())
       return next(new ErrorHandler("Not authorized", 403))
 
-    // FIX: Changed .remove() to .deleteOne()
-    await product.deleteOne() 
-
+    await product.deleteOne()
     res.json({ success: true, message: "Product deleted" })
   } catch (err) {
     next(err)
@@ -51,26 +48,33 @@ exports.deleteProduct = async (req, res, next) => {
 }
 
 // Get All Products
-// Get All Products
 exports.getProducts = async (req, res, next) => {
   try {
-    let filter = {}; // Start with an empty filter
-
-    // NEW: If a 'category' is passed in the URL (e.g., /products?category=Electronics)
+    let filter = {};
     if (req.query.category) {
       filter.category = req.query.category;
     }
 
-    // You can add more filters here later, like for search:
-    // if (req.query.keyword) {
-    //   filter.name = { $regex: req.query.keyword, $options: 'i' };
-    // }
+    // === UPDATED THIS LINE ===
+    // We .populate() the 'vendor' field and select only the 'name'
+    const products = await Product.find(filter).populate('vendor', 'name');
 
-    const products = await Product.find(filter); // Pass the filter to .find()
-
-    res.json({ success: true, products });
+    res.json({ success: true, products })
   } catch (err) {
-    next(err);
+    next(err)
+  }
+}
+
+// Get Single Product Details
+exports.getProductDetails = async (req, res, next) => {
+  try {
+    // === UPDATED THIS LINE ===
+    const product = await Product.findById(req.params.id).populate('vendor', 'name');
+    
+    if (!product) return next(new ErrorHandler("Product not found", 404))
+    res.json({ success: true, product })
+  } catch (err) {
+    next(err)
   }
 }
 
@@ -91,22 +95,12 @@ exports.decreaseStockOnOrder = async (req, res, next) => {
     next(err)
   }
 }
+
 // Get all products for a specific vendor (My Products)
 exports.getVendorProducts = async (req, res, next) => {
   try {
     const products = await Product.find({ vendor: req.user._id })
     res.json({ success: true, products })
-  } catch (err) {
-    next(err)
-  }
-}
-// Get Single Product Details
-exports.getProductDetails = async (req, res, next) => {
-  try {
-    const product = await Product.findById(req.params.id)
-    if (!product) return next(new ErrorHandler("Product not found", 404))
-
-    res.json({ success: true, product })
   } catch (err) {
     next(err)
   }
