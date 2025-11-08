@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import axios from '../../api/axios'
 import { toast } from 'react-hot-toast'
+import { useSelector } from 'react-redux'
 
 export default function AdminDashboard() {
   const navigate = useNavigate()
@@ -11,6 +12,11 @@ export default function AdminDashboard() {
   
   const [allProducts, setAllProducts] = useState([])
   const [loadingProducts, setLoadingProducts] = useState(false)
+  
+  const [myOrders, setMyOrders] = useState([])
+  const [loadingMyOrders, setLoadingMyOrders] = useState(false)
+
+  const { user } = useSelector(state => state.auth)
 
   const [form, setForm] = useState({
     name: '',
@@ -21,6 +27,7 @@ export default function AdminDashboard() {
     imageUrl: ''
   })
 
+  // Fetch pending applications
   const fetchApplications = async () => {
     try {
       const { data } = await axios.get('/admin/vendor/applications')
@@ -32,6 +39,7 @@ export default function AdminDashboard() {
     }
   }
 
+  // Fetch all products
   const fetchAllProducts = async () => {
     setLoadingProducts(true)
     try {
@@ -46,8 +54,21 @@ export default function AdminDashboard() {
     }
   }
 
+  // Fetch "My Orders"
+  const fetchMyOrders = async () => {
+    setLoadingMyOrders(true)
+    try {
+      const { data } = await axios.get('/vendor/orders')
+      setMyOrders(data.orders)
+    } catch (err) {
+      toast.error('Could not fetch your orders')
+    } finally {
+      setLoadingMyOrders(false)
+    }
+  };
+
+  // Load all data on component mount
   useEffect(() => {
-    const user = JSON.parse(localStorage.getItem('user'))
     if (user?.role !== 'admin') {
       toast.error('Access denied. Admins only.')
       navigate('/')
@@ -55,11 +76,12 @@ export default function AdminDashboard() {
     }
     fetchApplications()
     fetchAllProducts()
-  }, [navigate])
+    fetchMyOrders()
+  }, [navigate, user])
 
+  // Approve/Reject Vendor
   const handleApprove = async (id) => {
     try {
-      // This route comes from vendorRoutes.js and hits vendorController.updateVendorStatus
       await axios.put(`/admin/vendor/${id}`, { approved: true }) 
       toast.success('Application approved!')
       fetchApplications()
@@ -70,7 +92,6 @@ export default function AdminDashboard() {
 
   const handleReject = async (id) => {
     try {
-      // This route comes from vendorRoutes.js and hits vendorController.updateVendorStatus
       await axios.put(`/admin/vendor/${id}`, { approved: false }) 
       toast.success('Application rejected')
       fetchApplications()
@@ -79,6 +100,7 @@ export default function AdminDashboard() {
     }
   }
 
+  // Add Product
   const handleProductChange = e => {
     setForm({ ...form, [e.target.name]: e.target.value })
   }
@@ -102,6 +124,7 @@ export default function AdminDashboard() {
     }
   }
 
+  // Delete Product
   const handleProductDelete = async (id) => {
     if (!window.confirm('Are you sure you want to delete this product?')) {
       return
@@ -114,6 +137,17 @@ export default function AdminDashboard() {
       toast.error('Failed to delete product')
     }
   }
+
+  // Update Order Status
+  const handleStatusChange = async (orderId, newStatus) => {
+    try {
+      await axios.put(`/admin/order/${orderId}`, { orderStatus: newStatus });
+      toast.success(`Order marked as ${newStatus}`);
+      fetchMyOrders();
+    } catch (err) {
+      toast.error('Failed to update order status');
+    }
+  };
 
   return (
     <div className="max-w-6xl mx-auto p-6">
@@ -151,6 +185,16 @@ export default function AdminDashboard() {
         >
           Manage Products
         </button>
+        <button
+          onClick={() => setActiveTab('myOrders')}
+          className={`pb-2 px-4 font-medium ${
+            activeTab === 'myOrders'
+              ? 'border-b-2 border-teal-600 text-teal-600'
+              : 'text-gray-600'
+          }`}
+        >
+          My Orders
+        </button>
       </div>
 
       {/* Pending Applications Tab */}
@@ -165,11 +209,8 @@ export default function AdminDashboard() {
               {applications.map(app => (
                 <div key={app._id} className="bg-white p-4 rounded-lg shadow border">
                   <div className="flex justify-between items-start">
-                    
-                    {/* === THIS IS THE UPDATED UI BLOCK === */}
                     <div>
                       <h3 className="font-bold text-lg">{app.name} ({app.email})</h3>
-                      
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2 mt-4 text-sm">
                         <div>
                           <strong className="text-gray-600">Business Name:</strong>
@@ -197,8 +238,6 @@ export default function AdminDashboard() {
                         </div>
                       </div>
                     </div>
-                    {/* ===================================== */}
-
                     <div className="flex flex-col gap-2 flex-shrink-0">
                       <button
                         onClick={() => handleApprove(app._id)}
@@ -221,7 +260,7 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* Add Product Tab */}
+      {/* === ADD PRODUCT TAB (FIXED) === */}
       {activeTab === 'addProduct' && (
         <div>
           <h2 className="text-xl font-semibold mb-4">Add New Product</h2>
@@ -332,6 +371,62 @@ export default function AdminDashboard() {
                       Delete
                     </button>
                   </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* My Orders Tab */}
+      {activeTab === 'myOrders' && (
+        <div>
+          {loadingMyOrders ? (
+            <p>Loading your orders...</p>
+          ) : myOrders.length === 0 ? (
+            <p>You have no orders for your products yet.</p>
+          ) : (
+            <div className="space-y-4">
+              {myOrders.map(order => (
+                <div key={order._id} className="bg-white p-4 rounded-lg shadow-md">
+                  <div className="mb-2">
+                    <p><strong>Order ID:</strong> {order._id}</p>
+                    <p><strong>Customer:</strong> {order.user.name} ({order.user.email})</p>
+                    <p><strong>Status:</strong> <span className="font-semibold">{order.orderStatus}</span></p>
+                  </div>
+                  
+                  <h4 className="font-semibold mt-2">Your Items in this Order:</h4>
+                  {order.orderItems
+                    .filter(item => item.vendor === user._id) 
+                    .map(item => (
+                      <div key={item.product} className="flex justify-between items-center p-2 border-b">
+                        <p>{item.name} (x{item.quantity})</p>
+                        <p>৳{item.price * item.quantity}</p>
+                      </div>
+                  ))}
+                  
+                  {order.orderStatus !== 'Delivered' && (
+                    <div className="flex gap-2 mt-4">
+                      <button
+                        onClick={() => handleStatusChange(order._id, 'Confirmed')}
+                        className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
+                      >
+                        Confirm
+                      </button>
+                      <button
+                        onClick={() => handleStatusChange(order._id, 'Shipped')}
+                        className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600"
+                      >
+                        Ship
+                      </button>
+                      <button
+                        onClick={() => handleStatusChange(order._id, 'Delivered')}
+                        className="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600"
+                      >
+                        Deliver
+                      </button>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
