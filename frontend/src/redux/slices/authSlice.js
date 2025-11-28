@@ -56,7 +56,7 @@ export const logoutUser = createAsyncThunk(
   }
 );
 
-// === THIS IS THE UPDATED INITIAL STATE ===
+// === INITIAL STATE ===
 const initialState = {
   // Load user and token from localStorage
   user: localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')) : null,
@@ -69,7 +69,7 @@ const initialState = {
 
 const authSlice = createSlice({
   name: 'auth',
-  initialState: initialState, // Use the initialState defined above
+  initialState: initialState,
   reducers: {
     clearError: (state) => {
       state.error = null;
@@ -77,7 +77,7 @@ const authSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // Register
+      // --- Register ---
       .addCase(registerUser.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -87,7 +87,7 @@ const authSlice = createSlice({
         state.isAuthenticated = true;
         state.user = action.payload.user;
         state.token = action.payload.token;
-        // Also set localStorage on register
+        // Set localStorage
         localStorage.setItem('user', JSON.stringify(action.payload.user));
         localStorage.setItem('token', action.payload.token);
       })
@@ -95,18 +95,18 @@ const authSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
-      // Login
+
+      // --- Login ---
       .addCase(loginUser.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      // === THIS IS THE UPDATED LOGIN REDUCER ===
       .addCase(loginUser.fulfilled, (state, action) => {
         state.loading = false;
         state.isAuthenticated = true;
         state.user = action.payload.user;
         state.token = action.payload.token;
-        // Manage localStorage
+        // Set localStorage
         localStorage.setItem('user', JSON.stringify(action.payload.user));
         localStorage.setItem('token', action.payload.token);
       })
@@ -114,18 +114,44 @@ const authSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
-      // Get Profile
+
+      // --- Get Profile ---
       .addCase(getUserProfile.fulfilled, (state, action) => {
         state.user = action.payload.user;
         state.isAuthenticated = true;
+        // === UPDATE LOCAL STORAGE ===
+        // Persist updated user info (like vendor status)
+        localStorage.setItem('user', JSON.stringify(action.payload.user));
+        // ============================
       })
-      // Logout
-      // === THIS IS THE UPDATED LOGOUT REDUCER ===
+      // === AUTO-LOGOUT ON PROFILE ERROR ===
+      // If fetching profile fails (token expired), force logout
+      .addCase(getUserProfile.rejected, (state) => {
+        state.loading = false;
+        state.user = null;
+        state.token = null;
+        state.isAuthenticated = false;
+        localStorage.removeItem('user');
+        localStorage.removeItem('token');
+      })
+
+      // --- Logout ---
       .addCase(logoutUser.fulfilled, (state) => {
+        state.loading = false;
         state.user = null;
         state.token = null;
         state.isAuthenticated = false;
         // Clear localStorage
+        localStorage.removeItem('user');
+        localStorage.removeItem('token');
+      })
+      // === FORCE LOGOUT EVEN ON ERROR ===
+      .addCase(logoutUser.rejected, (state) => {
+        state.loading = false;
+        state.user = null;
+        state.token = null;
+        state.isAuthenticated = false;
+        // Force clear localStorage even if server error
         localStorage.removeItem('user');
         localStorage.removeItem('token');
       });

@@ -1,11 +1,13 @@
 import { useState } from 'react'
-import { useSelector } from 'react-redux'
+import { useSelector, useDispatch } from 'react-redux' // 1. Import useDispatch
 import { toast } from 'react-hot-toast'
 import axios from '../../api/axios'
 import { useNavigate } from 'react-router-dom'
+import { getUserProfile } from '../../redux/slices/authSlice' // 2. Import the action
 
 export default function VendorApplication() {
   const navigate = useNavigate()
+  const dispatch = useDispatch() // 3. Initialize dispatch
   const { user, isAuthenticated } = useSelector(state => state.auth)
   const [loading, setLoading] = useState(false)
   
@@ -28,9 +30,12 @@ export default function VendorApplication() {
 
     try {
       await axios.post('/vendor/apply', form)
+      
+      // 4. Fetch updated profile so Navbar "Apply" button changes to "Pending"
+      await dispatch(getUserProfile()) 
+
       toast.success('✅ Vendor application submitted! Awaiting admin approval.')
       
-      // Clear form
       setForm({
         businessName: '',
         businessAddress: '',
@@ -40,13 +45,11 @@ export default function VendorApplication() {
         description: ''
       })
       
-      // Redirect to home after 2 seconds
-      setTimeout(() => navigate('/'), 2000)
+      setTimeout(() => navigate('/dashboard'), 2000)
       
     } catch (error) {
       const message = error.response?.data?.message || 'Application submission failed'
       
-      // Handle specific error messages
       if (message.includes('pending')) {
         toast.info('ℹ️ You already have a pending vendor application')
       } else if (message.includes('already a vendor')) {
@@ -60,6 +63,8 @@ export default function VendorApplication() {
     }
   }
 
+  // ... (Keep the rest of your component code exactly the same)
+  // ...
   if (!isAuthenticated) {
     return (
       <div className="max-w-2xl mx-auto p-6 bg-yellow-50 border border-yellow-200 rounded">
@@ -88,6 +93,7 @@ export default function VendorApplication() {
       </p>
 
       <form onSubmit={handleSubmit} className="space-y-4">
+        {/* ... (Keep your form fields exactly as they were) ... */}
         
         <div>
           <label className="form-label">Business Name *</label>

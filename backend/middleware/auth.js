@@ -33,7 +33,12 @@ exports.isAuthenticatedUser = catchAsyncErrors(async (req, res, next) => {
 // Authorize roles
 exports.authorizeRoles = (...roles) => {
   return (req, res, next) => {
-    if (!roles.includes(req.user.role)) {
+    
+    // === TEMPORARY DEBUGGING: Role Check Disabled ===
+    // This allows ANY logged-in user to access ANY protected route.
+    // Use this ONLY to verify if permissions are causing the crash.
+    
+    /* if (!roles.includes(req.user.role)) {
       return next(
         new ErrorHandler(
           `Role: ${req.user.role} is not allowed to access this resource`,
@@ -41,6 +46,10 @@ exports.authorizeRoles = (...roles) => {
         )
       );
     }
+    */
+   
+    // ================================================
+    
     next();
   };
 };

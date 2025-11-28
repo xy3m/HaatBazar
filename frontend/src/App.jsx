@@ -1,6 +1,9 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
-
+import { useEffect, useState } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
+import { getUserProfile } from './redux/slices/authSlice'
+import Profile from './pages/Profile.jsx'
 // Component Imports
 import Navbar from './components/Navbar.jsx'
 
@@ -23,19 +26,40 @@ import VendorApplication from './pages/vendor/VendorApplication.jsx'
 // Page Imports (Admin)
 import AdminDashboard from './pages/admin/AdminDashboard.jsx'
 import AdminEditProduct from './pages/admin/AdminEditProduct.jsx'
-import Dashboard from './pages/Dashboard.jsx' // 1. IMPORT THE NEW PAGE
+import Dashboard from './pages/Dashboard.jsx'
 
 function App() {
+  const dispatch = useDispatch()
+  const { isAuthenticated } = useSelector(state => state.auth)
+  const [isLoaded, setIsLoaded] = useState(false)
+
+  useEffect(() => {
+    const loadUser = async () => {
+      if (isAuthenticated) {
+        // Force fetch the latest user data from server
+        await dispatch(getUserProfile())
+      }
+      setIsLoaded(true)
+    }
+    loadUser()
+  }, [dispatch, isAuthenticated])
+
+  // Optional: Show a blank screen or spinner for a split second 
+  // while we check the server for the latest status.
+  // This prevents the "Apply" button from flashing on screen.
+  if (!isLoaded) return null 
+
   return (
     <BrowserRouter>
       <Navbar />
       <Toaster position="top-center" />
       
       <Routes>
+        <Route path="/profile" element={<Profile />} />
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
-        <Route path="/admin/products/edit/:id" element={<AdminEditProduct />} /> {/* <-- 2. ADD THIS ROUTE */}
+        <Route path="/admin/products/edit/:id" element={<AdminEditProduct />} />
         <Route path="/" element={<Home />} />
-        <Route path="/dashboard" element={<Dashboard />} /> {/* 2. ADD THIS ROUTE */}
+        <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/products" element={<Products />} />
@@ -46,7 +70,7 @@ function App() {
         <Route path="/cart" element={<Cart />} />
         <Route path="/orders/me" element={<MyOrders />} />
         <Route path="/vendor/orders" element={<VendorOrders />} />
-        <Route path="/vendor/apply" element={<VendorApplication />} /> {/* 2. ADD THIS ROUTE */}
+        <Route path="/vendor/apply" element={<VendorApplication />} />
       </Routes>
     </BrowserRouter>
   )

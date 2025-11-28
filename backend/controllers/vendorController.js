@@ -6,10 +6,6 @@ const ErrorHandler = require('../utils/errorHandler');
 const catchAsyncErrors = require('../middleware/catchAsyncErrors');
 
 // Apply to become a vendor => /api/v1/vendor/apply
-// Apply to become a vendor => /api/v1/vendor/apply
-// Apply to become a vendor => /api/v1/vendor/apply
-// Apply to become a vendor => /api/v1/vendor/apply
-// Apply to become a vendor => /api/v1/vendor/apply
 exports.applyVendor = catchAsyncErrors(async (req, res, next) => {
   const { 
     businessName, 
@@ -20,48 +16,39 @@ exports.applyVendor = catchAsyncErrors(async (req, res, next) => {
     description 
   } = req.body;
 
-  console.log('📦 Received data:', req.body);
-
+  // 1. Check if user is already a vendor
   const user = await User.findById(req.user.id);
-
   if (user.role === 'vendor') {
     return next(new ErrorHandler('You are already a vendor', 400));
   }
 
-  // REMOVED THE PENDING CHECK - IT WAS CAUSING THE ISSUE!
-  // Just overwrite whatever is there
+  // 2. Create the Vendor Info Object
+  const newVendorInfo = {
+    businessName,
+    businessType,
+    businessAddress,
+    taxId,
+    phoneNumber,
+    description,
+    status: 'pending',
+    isApproved: false,
+    applicationDate: Date.now() // This generates the timestamp
+  };
 
-  // Use direct MongoDB collection update to bypass Mongoose schema
-  const result = await User.collection.updateOne(
-    { _id: user._id },
-    {
-      $set: {
-        vendorInfo: {
-          businessName: businessName,
-          businessType: businessType,
-          businessAddress: businessAddress,
-          taxId: taxId,
-          phoneNumber: phoneNumber,
-          description: description,
-          isApproved: false,
-          applicationDate: new Date()
-        }
-      }
-    }
-  );
-
-  console.log('✅ MongoDB update result:', result);
+  // 3. Force Update using findByIdAndUpdate
+  // This bypasses "save" logic and forces the data into the DB
+  await User.findByIdAndUpdate(req.user.id, {
+    vendorInfo: newVendorInfo
+  }, {
+    new: true,
+    runValidators: false 
+  });
 
   res.status(200).json({
     success: true,
     message: 'Vendor application submitted successfully'
   });
 });
-
-
-
-
-
 
 // Get vendor dashboard stats => /api/v1/vendor/dashboard
 exports.getVendorDashboard = catchAsyncErrors(async (req, res, next) => {
@@ -98,7 +85,9 @@ exports.getVendorDashboard = catchAsyncErrors(async (req, res, next) => {
   };
 
   orders.forEach((order) => {
-    orderStatusCount[order.orderStatus]++;
+    if (orderStatusCount[order.orderStatus] !== undefined) {
+      orderStatusCount[order.orderStatus]++;
+    }
   });
 
   res.status(200).json({
@@ -125,8 +114,10 @@ exports.getAllVendors = catchAsyncErrors(async (req, res, next) => {
 
 // Get pending vendor applications - ADMIN => /api/v1/admin/vendor/applications
 exports.getPendingApplications = catchAsyncErrors(async (req, res, next) => {
+  // Find users where vendorInfo exists, is not approved, and status is pending
   const applications = await User.find({
     'vendorInfo.isApproved': false,
+    'vendorInfo.status': 'pending', 
     'vendorInfo.applicationDate': { $exists: true }
   });
 
@@ -154,12 +145,15 @@ exports.updateVendorStatus = catchAsyncErrors(async (req, res, next) => {
   if (approved) {
     user.role = 'vendor';
     user.vendorInfo.isApproved = true;
+    user.vendorInfo.status = 'approved';
     user.vendorInfo.approvedDate = Date.now();
   } else {
-    user.vendorInfo = undefined;
+    // Reject: Keep info but mark status as rejected
+    user.vendorInfo.status = 'rejected';
+    user.vendorInfo.isApproved = false;
   }
 
-  await user.save();
+  await user.save({ validateBeforeSave: false });
 
   res.status(200).json({
     success: true,

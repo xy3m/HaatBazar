@@ -11,12 +11,19 @@ export default function Navbar() {
   const { user, isAuthenticated } = useSelector((state) => state.auth)
   const { cartItems } = useSelector((state) => state.cart)
 
-  const handleLogout = () => {
-    dispatch(logoutUser()) 
+  // === CRASH PREVENTION FIX ===
+  // If Redux says we are authenticated but 'user' is null/undefined, 
+  // use an empty object to prevent "Cannot read property of null" errors.
+  const safeUser = user || {}; 
+  // ===========================
+
+  const handleLogout = async () => {
+    await dispatch(logoutUser()) 
     toast.success('Logged out successfully')
     navigate('/')
   }
 
+  // If not authenticated and on home page, hide navbar (optional style choice)
   if (!isAuthenticated && location.pathname === '/') return null
 
   return (
@@ -51,16 +58,12 @@ export default function Navbar() {
                   )}
                 </Link>
 
-                {/* === NEW: "HISTORY" LINK FOR ALL LOGGED-IN USERS === */}
-                <Link 
-                  to="/orders/me" 
-                  className="hover:text-teal-600 font-medium"
-                >
+                <Link to="/orders/me" className="hover:text-teal-600 font-medium">
                   History
                 </Link>
 
-                {/* === VENDOR LINKS (RENAMED) === */}
-                {user.role === 'vendor' && (
+                {/* === VENDOR LINKS (Use safeUser) === */}
+                {safeUser.role === 'vendor' && (
                   <>
                     <Link to="/vendor/orders" className="hover:text-teal-600 font-medium">
                       Received Orders
@@ -71,27 +74,49 @@ export default function Navbar() {
                   </>
                 )}
 
-                {/* Admin-specific link */}
-                {user.role === 'admin' && (
+                {/* === ADMIN LINKS (Use safeUser) === */}
+                {safeUser.role === 'admin' && (
                   <Link to="/admin/dashboard" className="bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600">
                     Admin Panel
                   </Link>
                 )}
 
-                {/* === USER LINKS (UPDATED) === */}
-                {user.role === 'user' && (
+                {/* === USER LINKS (Use safeUser) === */}
+                {safeUser.role === 'user' && (
                   <>
-                    {/* "My Orders" was removed and replaced by the global "History" link */}
-                    <Link 
-                      to="/vendor/apply" 
-                      className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 font-medium"
-                    >
-                      Apply as Vendor
-                    </Link>
+                    {/* Case 1: No Real Application yet -> Show Apply Button */}
+                    {(!safeUser.vendorInfo || !safeUser.vendorInfo.applicationDate) && (
+                      <Link 
+                        to="/vendor/apply" 
+                        className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 font-medium"
+                      >
+                        Apply as Vendor
+                      </Link>
+                    )}
+
+                    {/* Case 2: Real Application Pending */}
+                    {safeUser.vendorInfo?.applicationDate && safeUser.vendorInfo.status === 'pending' && (
+                      <span className="bg-yellow-100 text-yellow-800 px-4 py-2 rounded-lg font-medium border border-yellow-200 cursor-default">
+                        ⏳ Application Pending
+                      </span>
+                    )}
+
+                    {/* Case 3: Application Rejected -> Show Re-apply Button */}
+                    {safeUser.vendorInfo?.status === 'rejected' && (
+                      <Link 
+                        to="/vendor/apply" 
+                        className="bg-red-100 text-red-700 px-4 py-2 rounded-lg font-medium border border-red-200 hover:bg-red-200"
+                      >
+                        ❌ Rejected (Apply Again)
+                      </Link>
+                    )}
                   </>
                 )}
 
-                <span className="text-gray-600">Hi, {user.name}</span>
+                {/* Replace the old <span> with this <Link> */}
+    <Link to="/profile" className="text-gray-600 hidden md:block hover:text-teal-600 font-medium">
+  👤 {safeUser.name}
+    </Link>
                 <button 
                   onClick={handleLogout}
                   className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"

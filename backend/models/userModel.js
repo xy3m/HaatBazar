@@ -66,6 +66,11 @@ const userSchema = new mongoose.Schema({
     type: String,
     maxLength: [1000, 'Description cannot exceed 1000 characters']
   },
+  status: {
+      type: String,
+      enum: ['pending', 'approved', 'rejected'],
+      default: 'pending'
+    },
   isApproved: {
     type: Boolean,
     default: false
