@@ -68,11 +68,14 @@ exports.getVendorDashboard = catchAsyncErrors(async (req, res, next) => {
   let totalOrders = orders.length;
 
   orders.forEach((order) => {
-    order.orderItems.forEach((item) => {
-      if (item.vendor.toString() === vendorId) {
-        totalSales += item.price * item.quantity;
-      }
-    });
+    // === LOGIC FIX: Only count sales if order is Delivered ===
+    if (order.orderStatus === 'Delivered') {
+      order.orderItems.forEach((item) => {
+        if (item.vendor.toString() === vendorId) {
+          totalSales += item.price * item.quantity;
+        }
+      });
+    }
   });
 
   // Get order status breakdown

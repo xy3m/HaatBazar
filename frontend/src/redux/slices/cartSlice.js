@@ -1,18 +1,26 @@
-// frontend/src/redux/slices/cartSlice.js
 import { createSlice } from '@reduxjs/toolkit';
 
+// Helper to safely load cart from local storage
+const loadCartFromStorage = () => {
+  try {
+    const savedCart = localStorage.getItem('cartItems');
+    if (!savedCart) return [];
+    const parsedCart = JSON.parse(savedCart);
+    return Array.isArray(parsedCart) ? parsedCart : [];
+  } catch (e) {
+    console.error("Failed to load cart from storage", e);
+    return [];
+  }
+};
+
 const initialState = {
-  // Load cart from localStorage if it exists
-  cartItems: localStorage.getItem('cartItems')
-    ? JSON.parse(localStorage.getItem('cartItems'))
-    : [],
+  cartItems: loadCartFromStorage(),
 };
 
 const cartSlice = createSlice({
   name: 'cart',
   initialState,
   reducers: {
-    // Add item to cart (or update quantity if it exists)
     addItemToCart: (state, action) => {
       const product = action.payload;
       const itemExists = state.cartItems.find(
@@ -20,28 +28,25 @@ const cartSlice = createSlice({
       );
 
       if (itemExists) {
-        // Increase quantity, but not past the available stock
         itemExists.quantity = Math.min(
           itemExists.quantity + 1,
           itemExists.stock
         );
       } else {
-        // Add new item to cart
         state.cartItems.push({
           product: product._id,
           name: product.name,
           price: product.price,
-          image: product.images?.[0]?.url || 'httpsIA://via.placeholder.com/150',
+          // Fixed the typo 'httpsIA' -> 'https'
+          image: product.images?.[0]?.url || 'https://via.placeholder.com/150',
           stock: product.stock,
-          vendor: product.vendor, // We need this for the order
+          vendor: product.vendor,
           quantity: 1,
         });
       }
-      // Save to localStorage
       localStorage.setItem('cartItems', JSON.stringify(state.cartItems));
     },
 
-    // Update quantity
     updateCartQuantity: (state, action) => {
       const { productId, quantity } = action.payload;
       const item = state.cartItems.find((i) => i.product === productId);
@@ -51,7 +56,6 @@ const cartSlice = createSlice({
       localStorage.setItem('cartItems', JSON.stringify(state.cartItems));
     },
 
-    // Remove item from cart
     removeItemFromCart: (state, action) => {
       const productId = action.payload;
       state.cartItems = state.cartItems.filter(
@@ -60,19 +64,32 @@ const cartSlice = createSlice({
       localStorage.setItem('cartItems', JSON.stringify(state.cartItems));
     },
 
-    // Clear cart (after order)
     clearCart: (state) => {
       state.cartItems = [];
       localStorage.removeItem('cartItems');
     },
+
+    updateCartItemStock: (state, action) => {
+      const { productId, stock } = action.payload;
+      const item = state.cartItems.find((i) => i.product === productId);
+      
+      if (item) {
+        item.stock = stock;
+        if (item.quantity > stock) {
+          item.quantity = stock;
+        }
+      }
+      localStorage.setItem('cartItems', JSON.stringify(state.cartItems));
+    }
   },
 });
 
-export const {
-  addItemToCart,
-  removeItemFromCart,
-  updateCartQuantity,
+export const { 
+  addItemToCart, 
+  updateCartQuantity, 
+  removeItemFromCart, 
   clearCart,
+  updateCartItemStock 
 } = cartSlice.actions;
 
 export default cartSlice.reducer;

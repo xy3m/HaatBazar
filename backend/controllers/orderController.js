@@ -4,8 +4,7 @@ const Product = require('../models/productModel');
 const ErrorHandler = require('../utils/errorHandler');
 const catchAsyncErrors = require('../middleware/catchAsyncErrors');
 
-// --- THIS IS THE HELPER FUNCTION ---
-// We move it here so newOrder can use it.
+// --- HELPER FUNCTION: Update Stock ---
 async function updateStock(productId, quantity) {
   const product = await Product.findById(productId);
 
@@ -34,17 +33,28 @@ exports.newOrder = catchAsyncErrors(async (req, res, next) => {
     paymentInfo
   } = req.body;
 
-  // --- 1. CHECK STOCK BEFORE CREATING ORDER ---
+  // --- 1. VALIDATION LOOP ---
+  // We check stock AND vendor ownership before creating anything
   for (const item of orderItems) {
     const product = await Product.findById(item.product);
+    
     if (!product) {
       return next(new ErrorHandler(`Product not found: ${item.name}`, 404));
     }
+
+    // CHECK A: Insufficient Stock
     if (product.stock < item.quantity) {
       return next(new ErrorHandler(`Insufficient stock for ${product.name}`, 400));
     }
+
+    // CHECK B: Buying Own Product
+    // We compare the product's vendor ID with the logged-in user's ID
+    if (product.vendor.toString() === req.user._id.toString()) {
+      return next(new ErrorHandler(`You cannot buy your own product: ${product.name}`, 400));
+    }
   }
 
+  // --- 2. CREATE ORDER ---
   const order = await Order.create({
     orderItems,
     shippingInfo,
@@ -57,7 +67,7 @@ exports.newOrder = catchAsyncErrors(async (req, res, next) => {
     user: req.user._id
   });
 
-  // --- 2. UPDATE STOCK IMMEDIATELY ---
+  // --- 3. UPDATE STOCK ---
   for (const item of order.orderItems) {
     await updateStock(item.product, item.quantity);
   }
@@ -124,8 +134,7 @@ exports.updateOrder = catchAsyncErrors(async (req, res, next) => {
     return next(new ErrorHandler('Order already delivered', 400));
   }
 
-  // --- 3. STOCK LOGIC IS REMOVED FROM HERE ---
-  // (We only update the deliveredAt timestamp)
+  // We only update the deliveredAt timestamp if status is Delivered
   if (req.body.orderStatus === 'Delivered') {
     order.deliveredAt = Date.now();
   }
