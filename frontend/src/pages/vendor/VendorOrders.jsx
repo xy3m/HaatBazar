@@ -2,42 +2,58 @@ import { useState, useEffect } from 'react';
 import axios from '../../api/axios';
 import { toast } from 'react-hot-toast';
 import { useSelector } from 'react-redux';
+import { Navigate } from 'react-router-dom';
 
 export default function VendorOrders() {
-  const { user } = useSelector(state => state.auth);
+  const { user, isAuthenticated } = useSelector(state => state.auth);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // Define functions and effects FIRST (Always call hooks at the top level)
+  
   const fetchVendorOrders = async () => {
     try {
       const { data } = await axios.get('/vendor/orders');
       setOrders(data.orders);
     } catch (err) {
-      toast.error('Could not fetch orders');
+      if (err.response?.status !== 401) {
+        toast.error('Could not fetch orders');
+      }
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchVendorOrders();
-  }, []);
+    // Only fetch if we are actually logged in to avoid 401 errors
+    if (isAuthenticated && user) {
+      fetchVendorOrders();
+    }
+  }, [isAuthenticated, user]); // Add dependencies
 
+  // === SAFETY CHECK IS NOW HERE ===
+  // We place this AFTER all hooks (useState, useEffect) are defined.
+  // This satisfies React's rules while still protecting the render.
+  if (!isAuthenticated || !user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  // Handle status actions
   const handleStatusChange = async (orderId, newStatus) => {
     try {
       await axios.put(`/admin/order/${orderId}`, { orderStatus: newStatus });
       toast.success(`Order marked as ${newStatus}`);
-      fetchVendorOrders(); // Refresh the list
+      fetchVendorOrders(); 
     } catch (err) {
       toast.error('Failed to update order status');
     }
   };
 
   const handleClearHistory = async () => {
-    if (window.confirm('Are you sure you want to clear all delivered order history? This cannot be undone.')) {
+    if (window.confirm('Are you sure you want to clear all delivered order history?')) {
       try {
         await axios.delete('/vendor/orders/delivered');
-        toast.success('Delivered order history cleared');
+        toast.success('History cleared');
         fetchVendorOrders(); 
       } catch (err) {
         toast.error('Failed to clear history');
@@ -66,9 +82,7 @@ export default function VendorOrders() {
           {orders.map(order => (
             <div key={order._id} className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
               
-              {/* === ORDER HEADER & ADDRESS SECTION === */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4 border-b pb-4">
-                {/* Left: Order Info */}
                 <div>
                   <p className="text-sm text-gray-500">Order ID: <span className="font-mono text-black">{order._id}</span></p>
                   <p className="mt-1">
@@ -87,7 +101,6 @@ export default function VendorOrders() {
                   </p>
                 </div>
 
-                {/* Right: Shipping Address (NEW) */}
                 <div className="bg-gray-50 p-3 rounded-lg text-sm border">
                   <h4 className="font-bold text-gray-700 mb-1">📍 Shipping Address:</h4>
                   <p className="font-semibold">{order.shippingInfo.name}</p>
@@ -97,15 +110,14 @@ export default function VendorOrders() {
                 </div>
               </div>
               
-              {/* === ORDER ITEMS === */}
               <h4 className="font-semibold mb-2 text-gray-700">Items to Ship:</h4>
               <div className="space-y-2">
+                {/* Use optional chaining here just in case */}
                 {order.orderItems
-                  .filter(item => item.vendor === user._id)
+                  .filter(item => item.vendor === user?._id)
                   .map(item => (
                     <div key={item.product} className="flex justify-between items-center p-3 bg-gray-50 rounded">
                       <div className="flex items-center gap-3">
-                        {/* Optional: Add image here if you want */}
                         <div>
                           <p className="font-medium">{item.name}</p>
                           <p className="text-xs text-gray-500">Qty: {item.quantity}</p>
@@ -116,7 +128,6 @@ export default function VendorOrders() {
                 ))}
               </div>
               
-              {/* === ACTION BUTTONS === */}
               {order.orderStatus !== 'Delivered' && (
                 <div className="flex gap-3 mt-6 pt-4 border-t">
                   <button
