@@ -3,14 +3,18 @@ import axios from '../../api/axios';
 import { toast } from 'react-hot-toast';
 import { useSelector } from 'react-redux';
 import { Navigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import { FaBoxOpen, FaShippingFast, FaCheckCircle, FaTrashAlt, FaMapMarkerAlt, FaUser, FaPhone } from 'react-icons/fa';
+
+import GlassCard from '../../components/ui/GlassCard';
+import GlowButton from '../../components/ui/GlowButton';
+import PageTransition from '../../components/ui/PageTransition';
 
 export default function VendorOrders() {
   const { user, isAuthenticated } = useSelector(state => state.auth);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Define functions and effects FIRST (Always call hooks at the top level)
-  
   const fetchVendorOrders = async () => {
     try {
       const { data } = await axios.get('/vendor/orders');
@@ -25,25 +29,20 @@ export default function VendorOrders() {
   };
 
   useEffect(() => {
-    // Only fetch if we are actually logged in to avoid 401 errors
     if (isAuthenticated && user) {
       fetchVendorOrders();
     }
-  }, [isAuthenticated, user]); // Add dependencies
+  }, [isAuthenticated, user]);
 
-  // === SAFETY CHECK IS NOW HERE ===
-  // We place this AFTER all hooks (useState, useEffect) are defined.
-  // This satisfies React's rules while still protecting the render.
   if (!isAuthenticated || !user) {
     return <Navigate to="/login" replace />;
   }
 
-  // Handle status actions
   const handleStatusChange = async (orderId, newStatus) => {
     try {
       await axios.put(`/admin/order/${orderId}`, { orderStatus: newStatus });
       toast.success(`Order marked as ${newStatus}`);
-      fetchVendorOrders(); 
+      fetchVendorOrders();
     } catch (err) {
       toast.error('Failed to update order status');
     }
@@ -54,106 +53,179 @@ export default function VendorOrders() {
       try {
         await axios.delete('/vendor/orders/delivered');
         toast.success('History cleared');
-        fetchVendorOrders(); 
+        fetchVendorOrders();
       } catch (err) {
         toast.error('Failed to clear history');
       }
     }
   };
 
-  if (loading) return <p className="p-6">Loading orders...</p>;
+  const statusColors = {
+    'Delivered': 'bg-emerald-100 text-emerald-700 border-emerald-200',
+    'Cancelled': 'bg-rose-100 text-rose-700 border-rose-200',
+    'Shipped': 'bg-amber-100 text-amber-700 border-amber-200',
+    'Processing': 'bg-blue-100 text-blue-700 border-blue-200'
+  };
+
+  if (loading) return (
+    <PageTransition>
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-500"></div>
+      </div>
+    </PageTransition>
+  );
 
   return (
-    <div className="max-w-6xl mx-auto p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Manage Orders</h1>
-        <button
-          onClick={handleClearHistory}
-          className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 text-sm font-medium"
-        >
-          Clear Delivered History
-        </button>
-      </div>
+    <PageTransition>
+      <div className="max-w-7xl mx-auto p-4 md:p-8 space-y-8">
 
-      {orders.length === 0 ? (
-        <p className="text-gray-500">You have no orders yet.</p>
-      ) : (
-        <div className="space-y-6">
-          {orders.map(order => (
-            <div key={order._id} className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4 border-b pb-4">
-                <div>
-                  <p className="text-sm text-gray-500">Order ID: <span className="font-mono text-black">{order._id}</span></p>
-                  <p className="mt-1">
-                    <strong>Customer:</strong> {order.user?.name} 
-                    <span className="text-gray-500 text-sm ml-1">({order.user?.email})</span>
-                  </p>
-                  <p className="mt-1">
-                    <strong>Status:</strong>{' '}
-                    <span className={`font-bold px-2 py-0.5 rounded text-sm ${
-                      order.orderStatus === 'Delivered' ? 'bg-green-100 text-green-700' :
-                      order.orderStatus === 'Cancelled' ? 'bg-red-100 text-red-700' :
-                      'bg-blue-100 text-blue-700'
-                    }`}>
-                      {order.orderStatus}
-                    </span>
-                  </p>
-                </div>
+        {/* Header Section */}
+        <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-8">
+          <div>
+            <h1 className="text-4xl font-bold text-slate-800 mb-2">Manage Orders</h1>
+            <p className="text-slate-500">Track and manage your customer shipments</p>
+          </div>
 
-                <div className="bg-gray-50 p-3 rounded-lg text-sm border">
-                  <h4 className="font-bold text-gray-700 mb-1">📍 Shipping Address:</h4>
-                  <p className="font-semibold">{order.shippingInfo.name}</p>
-                  <p>{order.shippingInfo.address}</p>
-                  <p>{order.shippingInfo.city}, {order.shippingInfo.division} - {order.shippingInfo.postalCode}</p>
-                  <p className="mt-1 text-teal-700 font-medium">📞 {order.shippingInfo.phone}</p>
-                </div>
-              </div>
-              
-              <h4 className="font-semibold mb-2 text-gray-700">Items to Ship:</h4>
-              <div className="space-y-2">
-                {/* Use optional chaining here just in case */}
-                {order.orderItems
-                  .filter(item => item.vendor === user?._id)
-                  .map(item => (
-                    <div key={item.product} className="flex justify-between items-center p-3 bg-gray-50 rounded">
-                      <div className="flex items-center gap-3">
-                        <div>
-                          <p className="font-medium">{item.name}</p>
-                          <p className="text-xs text-gray-500">Qty: {item.quantity}</p>
-                        </div>
-                      </div>
-                      <p className="font-medium">৳{item.price * item.quantity}</p>
-                    </div>
-                ))}
-              </div>
-              
-              {order.orderStatus !== 'Delivered' && (
-                <div className="flex gap-3 mt-6 pt-4 border-t">
-                  <button
-                    onClick={() => handleStatusChange(order._id, 'Confirmed')}
-                    className="flex-1 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition"
-                  >
-                    Confirm
-                  </button>
-                  <button
-                    onClick={() => handleStatusChange(order._id, 'Shipped')}
-                    className="flex-1 bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600 transition"
-                  >
-                    Ship
-                  </button>
-                  <button
-                    onClick={() => handleStatusChange(order._id, 'Delivered')}
-                    className="flex-1 bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition"
-                  >
-                    Deliver
-                  </button>
-                </div>
-              )}
-            </div>
-          ))}
+          <GlowButton
+            onClick={handleClearHistory}
+            disabled={orders.length === 0}
+            style={{ background: 'linear-gradient(135deg, #ef4444 0%, #b91c1c 100%)' }}
+            className={`flex items-center gap-2 !py-2.5 !px-5 disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed`}
+          >
+            <FaTrashAlt size={16} />
+            Clear Delivered History
+          </GlowButton>
         </div>
-      )}
-    </div>
+
+        {orders.length === 0 ? (
+          <GlassCard className="py-20">
+            <div className="flex flex-col items-center justify-center gap-4 text-center">
+              <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center text-slate-300 mb-2">
+                <FaBoxOpen size={40} />
+              </div>
+              <h3 className="text-xl font-semibold text-slate-700">No active orders</h3>
+              <p className="text-slate-500 max-w-sm">When customers place orders for your products, they will appear here.</p>
+            </div>
+          </GlassCard>
+        ) : (
+          <div className="grid gap-6">
+            <AnimatePresence>
+              {orders.map((order, index) => (
+                <motion.div
+                  key={order._id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ delay: index * 0.1 }}
+                >
+                  <GlassCard className="p-0 overflow-hidden group">
+                    {/* Status Bar */}
+                    <div className={`h-1.5 w-full bg-gradient-to-r ${order.orderStatus === 'Delivered' ? 'from-emerald-400 to-teal-500' :
+                      order.orderStatus === 'Shipped' ? 'from-amber-400 to-orange-500' :
+                        'from-blue-400 to-indigo-500'
+                      }`} />
+
+                    <div className="p-6 md:p-8">
+                      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+                        {/* Column 1: Order Info */}
+                        <div className="space-y-4">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <h3 className="font-bold text-lg text-slate-800 flex items-center gap-2">
+                                Order #{order._id.slice(-6)}
+                              </h3>
+                              <span className="text-xs text-slate-400 font-mono uppercase tracking-widest">
+                                ID: {order._id}
+                              </span>
+                            </div>
+                            <span className={`px-3 py-1 rounded-full text-xs font-bold border ${statusColors[order.orderStatus] || 'bg-gray-100'}`}>
+                              {order.orderStatus}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center gap-3 bg-slate-50/50 p-3 rounded-xl border border-slate-100">
+                            <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center">
+                              <FaUser size={14} />
+                            </div>
+                            <div>
+                              <p className="text-sm font-semibold text-slate-700">{order.user?.name || 'Guest User'}</p>
+                              <p className="text-xs text-slate-500">{order.user?.email}</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Column 2: Shipping Info */}
+                        <div className="space-y-3 bg-slate-50/50 p-4 rounded-xl border border-slate-100">
+                          <h4 className="font-bold text-slate-700 flex items-center gap-2 text-sm">
+                            <FaMapMarkerAlt className="text-rose-500" /> Shipping Details
+                          </h4>
+                          <div className="text-sm text-slate-600 space-y-1 pl-6 relative">
+                            <div className="absolute left-1.5 top-2 bottom-2 w-0.5 bg-slate-200"></div>
+                            <p className="font-medium text-slate-800">{order.shippingInfo.name}</p>
+                            <p>{order.shippingInfo.address}</p>
+                            <p>{order.shippingInfo.city}, {order.shippingInfo.division} - {order.shippingInfo.postalCode}</p>
+                            <p className="flex items-center gap-2 text-teal-700 font-medium mt-1">
+                              <FaPhone size={12} /> {order.shippingInfo.phone}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Column 3: Actions & Items */}
+                        <div className="flex flex-col justify-between gap-4">
+                          <div className="space-y-2">
+                            <h4 className="font-bold text-slate-700 text-sm mb-2">Items to Ship:</h4>
+                            <div className="max-h-40 overflow-y-auto custom-scrollbar pr-2 space-y-2">
+                              {order.orderItems
+                                .filter(item => item.vendor === user?._id)
+                                .map(item => (
+                                  <div key={item.product} className="flex justify-between items-center p-2 bg-white rounded-lg border border-slate-100 shadow-sm">
+                                    <div className="flex items-center gap-3">
+                                      <div className="bg-slate-100 text-slate-500 w-8 h-8 flex items-center justify-center rounded text-xs font-bold">
+                                        x{item.quantity}
+                                      </div>
+                                      <p className="text-sm font-medium text-slate-700 line-clamp-1">{item.name}</p>
+                                    </div>
+                                    <p className="text-sm font-bold text-slate-800">৳{item.price * item.quantity}</p>
+                                  </div>
+                                ))}
+                            </div>
+                          </div>
+
+                          {/* Action Buttons */}
+                          {order.orderStatus !== 'Delivered' && (
+                            <div className="grid grid-cols-3 gap-2 mt-auto pt-4 border-t border-slate-100">
+                              <button
+                                onClick={() => handleStatusChange(order._id, 'Confirmed')}
+                                className="py-1.5 px-3 rounded-lg text-xs font-bold bg-blue-50 text-blue-600 hover:bg-blue-100 transition"
+                              >
+                                Confirm
+                              </button>
+                              <button
+                                onClick={() => handleStatusChange(order._id, 'Shipped')}
+                                className="py-1.5 px-3 rounded-lg text-xs font-bold bg-amber-50 text-amber-600 hover:bg-amber-100 transition"
+                              >
+                                Ship
+                              </button>
+                              <button
+                                onClick={() => handleStatusChange(order._id, 'Delivered')}
+                                className="py-1.5 px-3 rounded-lg text-xs font-bold bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition"
+                              >
+                                Deliver
+                              </button>
+                            </div>
+                          )}
+                        </div>
+
+                      </div>
+                    </div>
+                  </GlassCard>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </div>
+        )}
+      </div>
+    </PageTransition>
   );
 }

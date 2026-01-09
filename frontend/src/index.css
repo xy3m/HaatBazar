@@ -6,32 +6,86 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    /* Richer Color Palette based on Split-Complementary Theory */
+    --primary-gradient: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%);
+    /* Electric Sky to Royal Blue */
+    --accent-gradient: linear-gradient(135deg, #f43f5e 0%, #be185d 100%);
+    /* Rose to Pink */
+    --surface-gradient: linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.01) 100%);
+
+    --glass-border: 1px solid rgba(255, 255, 255, 0.15);
+    --glass-highlight: inset 0 1px 0 0 rgba(255, 255, 255, 0.2);
+  }
+
   html {
     font-family: 'Inter', sans-serif;
     -webkit-font-smoothing: antialiased;
   }
-  
+
   body {
-    /* Soft off-white background instead of harsh white or gray */
-    @apply bg-slate-50 text-slate-800;
+    @apply bg-slate-50 text-slate-800 antialiased overflow-x-hidden;
+    /* Deep, rich background with subtle noise */
+    background-image:
+      radial-gradient(at 0% 0%, hsla(210, 100%, 96%, 1) 0, transparent 50%),
+      radial-gradient(at 100% 0%, hsla(180, 100%, 96%, 1) 0, transparent 50%);
+    min-height: 100vh;
+  }
+}
+
+@layer utilities {
+  .glass {
+    @apply backdrop-blur-xl bg-white/60 border border-white/40 shadow-xl;
+  }
+
+  /* Layered Shadow System (Neu-morphism + Glass) */
+  .shadow-layer-sm {
+    box-shadow:
+      0 2px 4px -1px rgba(0, 0, 0, 0.06),
+      0 4px 6px -1px rgba(0, 0, 0, 0.08),
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.3);
+  }
+
+  .shadow-layer-md {
+    box-shadow:
+      0 4px 6px -1px rgba(0, 0, 0, 0.05),
+      0 10px 15px -3px rgba(0, 0, 0, 0.08),
+      0 0 0 1px rgba(255, 255, 255, 0.2) inset;
+  }
+
+  .shadow-layer-lg {
+    box-shadow:
+      0 10px 15px -3px rgba(0, 0, 0, 0.05),
+      0 20px 25px -5px rgba(0, 0, 0, 0.08),
+      0 0 20px rgba(14, 165, 233, 0.15);
+    /* Subtle primary tint glow */
+  }
+
+  .shadow-neon {
+    box-shadow: 0 0 15px rgba(14, 165, 233, 0.5), 0 0 30px rgba(14, 165, 233, 0.3);
   }
 }
 
 @layer components {
   .btn-primary {
-    @apply bg-gradient-to-r from-teal-500 to-teal-600 text-white px-6 py-2.5 rounded-xl font-medium shadow-lg shadow-teal-500/30 hover:shadow-teal-500/40 hover:-translate-y-0.5 transition-all duration-200;
-  }
-  
-  .btn-secondary {
-    @apply bg-white text-slate-700 px-6 py-2.5 rounded-xl font-medium border border-slate-200 shadow-sm hover:bg-slate-50 hover:border-slate-300 transition-all duration-200;
+    @apply relative overflow-hidden text-white px-6 py-2.5 rounded-xl font-medium transition-all duration-300;
+    background: var(--primary-gradient);
+    box-shadow: 0 4px 15px rgba(14, 165, 233, 0.4);
   }
 
-  .input-field {
-    @apply w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all shadow-sm;
+  .btn-primary:hover {
+    box-shadow: 0 8px 25px rgba(14, 165, 233, 0.5);
+    transform: translateY(-2px);
   }
 
-  /* The "Modern Card" style we will use everywhere */
-  .modern-card {
-    @apply bg-white rounded-2xl border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all duration-300;
+  .glass-card {
+    @apply relative backdrop-blur-xl bg-white/70 transition-all duration-500;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    /* Sharper border */
+    box-shadow:
+      0 4px 30px rgba(0, 0, 0, 0.05),
+      /* Diffuse shadow */
+      inset 0 0 20px rgba(255, 255, 255, 0.5);
+    /* Inner light */
   }
 }
