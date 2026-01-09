@@ -79,7 +79,7 @@
   }
 
   .glass-card {
-    @apply relative backdrop-blur-xl bg-white/70 transition-all duration-500;
+    @apply relative backdrop-blur-md bg-white/70 transition-all duration-500;
     border: 1px solid rgba(255, 255, 255, 0.4);
     /* Sharper border */
     box-shadow:

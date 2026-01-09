@@ -109,47 +109,69 @@ export default function Dashboard() {
     <PageTransition>
       <div className="min-h-screen bg-slate-50 overflow-hidden">
 
-        {/* 1. GSAP Animated Hero Section with Parallax */}
-        <div className="relative h-[600px] flex items-center justify-center overflow-hidden">
+        {/* 1. GSAP Animated Hero Section with Parallax & Gravity Effect */}
+        <div
+          className="relative h-[600px] flex items-center justify-center overflow-hidden group"
+          onMouseMove={(e) => {
+            const { currentTarget, clientX, clientY } = e;
+            const { left, top } = currentTarget.getBoundingClientRect();
+            const x = clientX - left;
+            const y = clientY - top;
+            currentTarget.style.setProperty('--x', `${x}px`);
+            currentTarget.style.setProperty('--y', `${y}px`);
+          }}
+        >
 
-
-          {/* Dynamic Background - Living Ecosystem */}
-          <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 z-0">
+          {/* Dynamic Background - Deep Green Ecosystem */}
+          <div className="absolute inset-0 bg-gradient-to-br from-emerald-950 via-teal-900 to-emerald-950 z-0">
+            {/* Texture */}
             <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] mix-blend-overlay"></div>
-            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-t from-slate-50 to-transparent z-10 opacity-5"></div>
 
-            {/* Floating Orbs - Ambient Atmosphere */}
-            <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-teal-500/10 rounded-full blur-3xl animate-pulse-slow"></div>
-            <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse-slow delay-1000"></div>
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-blue-500/5 rounded-full blur-3xl animate-pulse-slow delay-500"></div>
+            {/* Gravity Spotlight Effect */}
+            <div
+              className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+              style={{
+                background: `radial-gradient(800px circle at var(--x) var(--y), rgba(16, 185, 129, 0.15), transparent 40%)`
+              }}
+            />
+
+            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-t from-emerald-50 to-transparent z-10 opacity-5"></div>
+
+            {/* Floating Orbs - Nature Atmosphere */}
+            <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl animate-pulse-slow"></div>
+            <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-lime-500/10 rounded-full blur-3xl animate-pulse-slow delay-1000"></div>
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-teal-500/5 rounded-full blur-3xl animate-pulse-slow delay-500"></div>
           </div>
 
           <div className="relative z-10 text-center px-4 max-w-4xl mx-auto">
             <div className="overflow-hidden mb-4">
-              <h1 className="hero-title-line text-6xl md:text-8xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-emerald-400 drop-shadow-sm mb-2">
+              <h1 className="hero-title-line text-6xl md:text-8xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-300 drop-shadow-sm mb-2">
                 HaatBazar
               </h1>
             </div>
 
-            <p className="hero-subtitle text-xl md:text-2xl text-slate-200 mb-10 max-w-2xl mx-auto font-medium leading-relaxed tracking-wide">
+            <p className="hero-subtitle text-xl md:text-2xl text-emerald-100/90 mb-10 max-w-2xl mx-auto font-medium leading-relaxed tracking-wide">
               আপনার বাজার, আপনার হাতের মুঠোয়
             </p>
 
             <div className="flex gap-4 justify-center mb-12">
               <div className="hero-btn">
-                <GlowButton onClick={() => window.scrollTo({ top: 800, behavior: 'smooth' })} className="!text-lg !px-8 !py-4 shadow-neon">
+                <GlowButton onClick={() => window.scrollTo({ top: 800, behavior: 'smooth' })} className="!text-lg !px-8 !py-4 shadow-neon bg-emerald-600 hover:bg-emerald-500">
                   Shop Now
                 </GlowButton>
               </div>
               <div className="hero-btn">
-                <button className="px-8 py-4 rounded-xl glass text-white hover:bg-white/10 transition-all font-medium border border-white/20">
+                <button
+                  onClick={() => document.getElementById('categories').scrollIntoView({ behavior: 'smooth' })}
+                  className="px-8 py-4 rounded-xl glass text-white hover:bg-white/10 transition-all font-medium border border-white/20"
+                >
                   View Categories
                 </button>
               </div>
             </div>
 
             {/* Hero Stats */}
-            <div className="flex justify-center gap-8 md:gap-16 border-t border-white/10 pt-8">
+            <div className="flex justify-center gap-8 md:gap-16 border-t border-emerald-500/20 pt-8">
               {[
                 { label: 'Active Users', value: '10k+' },
                 { label: 'Premium Products', value: '500+' },
@@ -157,7 +179,7 @@ export default function Dashboard() {
               ].map((stat, i) => (
                 <div key={i} className="hero-stat flex flex-col items-center">
                   <span className="text-2xl md:text-3xl font-bold text-white mb-1">{stat.value}</span>
-                  <span className="text-xs md:text-sm text-slate-400 uppercase tracking-wider">{stat.label}</span>
+                  <span className="text-xs md:text-sm text-emerald-200/70 uppercase tracking-wider">{stat.label}</span>
                 </div>
               ))}
             </div>
@@ -168,7 +190,7 @@ export default function Dashboard() {
         <div className="max-w-7xl mx-auto px-4 py-16">
 
           {/* Categories Grid */}
-          <section className="mb-12">
+          <section id="categories" className="mb-12">
             <h2 className="text-2xl font-bold text-slate-800 mb-6">Browse Categories</h2>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
               {categories.map((cat, index) => (

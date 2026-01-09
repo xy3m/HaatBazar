@@ -42,19 +42,18 @@ export default function GlassCard({ children, className, hoverEffect = true, ...
             onMouseMove={handleMouseMove}
             onMouseLeave={handleMouseLeave}
             style={{
-                rotateX: hoverEffect ? rotateX : 0,
-                rotateY: hoverEffect ? rotateY : 0,
-                transformStyle: "preserve-3d",
+                // Removed 3D rotation to prevent browser text blurring
             }}
             whileHover={hoverEffect ? {
+                y: -10,
                 scale: 1.02,
-                transition: { type: "spring", stiffness: 400, damping: 10 }
+                transition: { type: "spring", stiffness: 250, damping: 25 }
             } : {}}
             {...props}
         >
-            {/* Ambient Glow Background - Refined Color Theory */}
+            {/* Ambient Glow Background - Refined: Removed blur-3xl per user request */}
             <div
-                className="absolute -inset-[150%] bg-gradient-to-r from-cyan-400/10 via-blue-500/5 to-purple-500/10 blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 rounded-full -z-10 animate-pulse-slow"
+                className="absolute -inset-[150%] bg-gradient-to-r from-cyan-400/10 via-blue-500/5 to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-700 rounded-full -z-10"
                 style={{ transform: "translateZ(-50px)" }}
             />
 

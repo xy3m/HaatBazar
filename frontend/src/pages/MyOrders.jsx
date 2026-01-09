@@ -15,11 +15,15 @@ export default function MyOrders() {
 
   useEffect(() => {
     const fetchOrders = async () => {
+      // Enforce a minimum loading time to prevent "flash of empty content"
+      const minLoadTime = new Promise(resolve => setTimeout(resolve, 800));
+      const request = axios.get('/orders/me');
+
       try {
-        const { data } = await axios.get('/orders/me');
+        const [_, { data }] = await Promise.all([minLoadTime, request]);
         setOrders(data.orders);
       } catch (err) {
-        toast.error('Could not fetch orders');
+        // toast.error('Could not fetch orders'); // Suppress error on 404/empty if specific code used
       } finally {
         setLoading(false);
       }
@@ -55,15 +59,21 @@ export default function MyOrders() {
         </div>
 
         {orders.length === 0 ? (
-          <GlassCard className="py-16">
-            <div className="flex flex-col items-center justify-center gap-4 text-center">
-              <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center text-slate-300 mb-2">
-                <FaBoxOpen size={40} />
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5 }}
+          >
+            <GlassCard className="py-16">
+              <div className="flex flex-col items-center justify-center gap-4 text-center">
+                <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center text-slate-300 mb-2">
+                  <FaBoxOpen size={40} />
+                </div>
+                <h3 className="text-xl font-semibold text-slate-700">No orders found</h3>
+                <p className="text-slate-500">You haven't placed any orders yet.</p>
               </div>
-              <h3 className="text-xl font-semibold text-slate-700">No orders found</h3>
-              <p className="text-slate-500">You haven't placed any orders yet.</p>
-            </div>
-          </GlassCard>
+            </GlassCard>
+          </motion.div>
         ) : (
           <div className="space-y-6">
             <AnimatePresence>

@@ -78,7 +78,12 @@ export default function Cart() {
   const taxPrice = Number((0.05 * itemsPrice).toFixed(2));
   const totalPrice = itemsPrice + shippingPrice + taxPrice;
 
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
+
   const handleCheckout = async () => {
+    if (checkoutLoading) return;
+    setCheckoutLoading(true);
+
     try {
       const orderData = {
         orderItems: cartItems,
@@ -102,11 +107,18 @@ export default function Cart() {
 
       await axios.post('/order/new', orderData);
 
-      dispatch(clearCart());
       toast.success('Order placed successfully!');
       navigate('/orders/me');
+
+      // Delay clearing cart to allow exit animation to complete with items visible
+      // preventing the "Flash of Empty Cart"
+      setTimeout(() => {
+        dispatch(clearCart());
+      }, 1000);
+
     } catch (err) {
       toast.error(err.response?.data?.message || 'Checkout failed');
+      setCheckoutLoading(false);
     }
   };
 
