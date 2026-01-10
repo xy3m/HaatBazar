@@ -61,6 +61,8 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
                 setFormData(prev => ({ ...prev, password: '' })); // Clear password
             }
         } catch (err) {
+            console.error("Auth Error Full:", err); // Debug log
+            console.error("Auth Error Response:", err.response); // Debug log
             toast.error(err.message || err.payload || 'Authentication failed');
         } finally {
             setLoading(false);

@@ -29,12 +29,19 @@ const vendorRoutes = require('./routes/vendorRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const userRoutes = require('./routes/userRoutes');
 
+const mongoose = require('mongoose');
+
 // Use routes
 // Health check route - Must be first to bypass auth middleware
 app.get('/api/v1/health', (req, res) => {
+  const dbStatus = mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected';
+  const dbState = mongoose.connection.readyState; // 0=disconnected, 1=connected, 2=connecting, 3=disconnecting
+
   res.status(200).json({
     success: true,
     message: 'HaatBazar API is running',
+    dbStatus,
+    dbState,
     timestamp: new Date().toISOString()
   });
 });
