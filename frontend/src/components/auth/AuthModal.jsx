@@ -99,10 +99,10 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
 
                         {/* Header */}
                         <div className="text-center mb-8">
-                            <h2 className="text-3xl font-bold text-slate-800 mb-2">
+                            <h2 className="text-3xl font-bold text-white mb-2">
                                 {mode === 'login' ? 'Welcome Back' : 'Join HaatBazar'}
                             </h2>
-                            <p className="text-slate-500">
+                            <p className="text-gray-400">
                                 {mode === 'login'
                                     ? 'Enter your credentials to access your account'
                                     : 'Create a new account to start trading'}

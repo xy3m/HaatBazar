@@ -69,7 +69,7 @@ export default function Dashboard() {
             <h1 className="text-4xl font-bold tracking-tight text-white mb-2">Store</h1>
             <p className="text-gray-500">The best new arrivals, curated for you.</p>
           </div>
-          <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide md:pb-0">
+          <div className="flex gap-4 overflow-x-auto pb-2 pt-2 scrollbar-hide md:pb-0">
             {categories.map(cat => (
               <Link
                 key={cat.name}
@@ -94,7 +94,7 @@ export default function Dashboard() {
             displayProducts.map((product) => (
               <GlassCard
                 key={product._id}
-                className="group flex flex-col justify-between h-[420px] !p-0 overflow-hidden"
+                className="group flex flex-col justify-between h-[460px] !p-0 overflow-hidden"
               >
                 {/* Image Area */}
                 <div className="h-[280px] w-full bg-gray-800 relative overflow-hidden">
@@ -120,6 +120,21 @@ export default function Dashboard() {
                       <h3 className="font-bold text-lg text-white leading-tight line-clamp-1">{product.name}</h3>
                       <span className="text-gray-400 font-medium">৳{product.price}</span>
                     </div>
+
+                    {/* Rating Stars */}
+                    <div className="flex items-center gap-1 mb-2">
+                      <div className="flex text-yellow-500 drop-shadow-sm">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <FaStar
+                            key={star}
+                            size={12}
+                            className={star <= (product.ratings || 0) ? "fill-current" : "text-gray-600"}
+                          />
+                        ))}
+                      </div>
+                      <span className="text-xs text-gray-500 font-medium ml-1">({product.numOfReviews})</span>
+                    </div>
+
                     <p className="text-sm text-gray-500 line-clamp-2">{product.description}</p>
                   </div>
 

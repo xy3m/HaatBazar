@@ -116,18 +116,18 @@ export default function VendorProducts() {
                         </div>
                       </div>
 
-                      <div className="flex gap-3 w-full sm:w-auto">
+                      <div className="flex gap-4 w-full sm:w-auto sm:min-w-[300px]">
                         <Link
                           to={`/vendor/products/edit/${product._id}`}
-                          className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-blue-500/10 text-blue-400 px-4 py-2 rounded-lg hover:bg-blue-500/20 border border-blue-500/20 transition-colors font-medium"
+                          className="flex-1 flex items-center justify-center gap-2 bg-blue-500/10 text-blue-400 px-4 py-3 rounded-xl hover:bg-blue-500/20 border border-blue-500/20 transition-colors font-medium text-sm"
                         >
-                          <FaPen size={12} /> Edit
+                          <FaPen size={14} /> Edit
                         </Link>
                         <button
                           onClick={() => deleteProduct(product._id)}
-                          className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-red-500/10 text-red-400 px-4 py-2 rounded-lg hover:bg-red-500/20 border border-red-500/20 transition-colors font-medium"
+                          className="flex-1 flex items-center justify-center gap-2 bg-red-500/10 text-red-400 px-4 py-3 rounded-xl hover:bg-red-500/20 border border-red-500/20 transition-colors font-medium text-sm"
                         >
-                          <FaTrashAlt size={12} /> Delete
+                          <FaTrashAlt size={14} /> Delete
                         </button>
                       </div>
                     </GlassCard>
