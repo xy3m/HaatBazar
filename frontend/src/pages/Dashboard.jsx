@@ -64,7 +64,7 @@ export default function Dashboard() {
       <div className="min-h-screen pt-32 px-6 md:px-12 pb-20">
 
         {/* Header Area */}
-        <div className="max-w-[1400px] mx-auto mb-12 flex flex-col md:flex-row justify-between items-end gap-6">
+        <div className="max-w-[1400px] mx-auto mb-12 flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
           <div>
             <h1 className="text-4xl font-bold tracking-tight text-white mb-2">Store</h1>
             <p className="text-gray-500">The best new arrivals, curated for you.</p>

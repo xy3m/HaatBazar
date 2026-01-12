@@ -3,6 +3,7 @@ import { useSelector, useDispatch } from 'react-redux'
 import { toast } from 'react-hot-toast'
 import { logoutUser } from '../redux/slices/authSlice'
 import { motion, AnimatePresence } from 'framer-motion'
+import { FaStore, FaSignOutAlt } from 'react-icons/fa'
 
 export default function Navbar() {
   const navigate = useNavigate()
@@ -87,19 +88,21 @@ export default function Navbar() {
           ) : (
             <div className="flex items-center gap-4">
               {safeUser.role !== 'vendor' && safeUser.role !== 'admin' && (
-                <Link to="/vendor/apply" className="text-xs font-bold uppercase tracking-widest text-teal-400 hover:text-teal-300">
-                  Become a Vendor
+                <Link to="/vendor/apply" className="text-teal-400 hover:text-teal-300">
+                  <FaStore className="text-xl sm:hidden" />
+                  <span className="hidden sm:block text-xs font-bold uppercase tracking-widest">Become a Vendor</span>
                 </Link>
               )}
               {safeUser.role !== 'vendor' && safeUser.role !== 'admin' && <div className="h-4 w-px bg-white/20" />}
 
               {safeUser.role === 'vendor' && (
-                <Link to="/vendor/dashboard" className="text-xs font-bold uppercase tracking-widest text-blue-400 hover:text-blue-300 hidden sm:block">
-                  Vendor Console
+                <Link to="/vendor/dashboard" className="text-blue-400 hover:text-blue-300">
+                  <FaStore className="text-xl sm:hidden" />
+                  <span className="hidden sm:block text-xs font-bold uppercase tracking-widest">Vendor Console</span>
                 </Link>
               )}
 
-              {safeUser.role === 'vendor' && <div className="h-4 w-px bg-white/20 hidden sm:block" />}
+              {safeUser.role === 'vendor' && <div className="h-4 w-px bg-white/20" />}
 
               <div className="flex items-center gap-3">
                 <Link to="/profile" className="flex items-center gap-2 text-sm text-gray-300 font-medium hover:text-white transition-colors">
@@ -107,9 +110,10 @@ export default function Navbar() {
                 </Link>
                 <button
                   onClick={handleLogout}
-                  className="text-xs font-medium text-gray-500 hover:text-white transition-colors border border-white/10 px-3 py-1 rounded-full hover:bg-white/10"
+                  className="text-xs font-medium text-gray-500 hover:text-white transition-colors border border-white/10 px-3 py-1 rounded-full hover:bg-white/10 flex items-center gap-2"
                 >
-                  Sign Out
+                  <FaSignOutAlt className="sm:hidden" />
+                  <span className="hidden sm:inline">Sign Out</span>
                 </button>
               </div>
             </div>
