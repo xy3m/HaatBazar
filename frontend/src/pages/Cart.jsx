@@ -297,7 +297,7 @@ export default function Cart() {
                       className="w-full mt-8 !py-4 rounded-xl !text-base"
                       variant="primary"
                     >
-                      Pay with HaatBazar
+                      Confirm Order
                     </GlowButton>
                   </GlassCard>
 

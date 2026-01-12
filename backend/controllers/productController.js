@@ -100,7 +100,7 @@ exports.decreaseStockOnOrder = async (req, res, next) => {
 exports.createProductReview = async (req, res, next) => {
   console.log(">>> createProductReview called");
   try {
-    const { rating, comment, productId } = req.body;
+    const { rating, comment, productId, orderId } = req.body;
     console.log("Request Body:", req.body);
     console.log("User:", req.user);
 
@@ -111,26 +111,47 @@ exports.createProductReview = async (req, res, next) => {
       comment,
     };
 
+    // If orderId is provided, link the review to the order
+    if (orderId) {
+      review.order = orderId;
+    }
+
     const product = await Product.findById(productId);
     console.log("Product found:", product ? "Yes" : "No");
 
-    // === FIX START: Handle product not found ===
     if (!product) {
       console.log("Product not found, returning 404");
       return next(new ErrorHandler("Product not found", 404));
     }
-    // === FIX END ===
 
-    const isReviewed = product.reviews.find(
-      (rev) => rev.user.toString() === req.user._id.toString()
-    );
+    let isReviewed = false;
+
+    if (orderId) {
+      // 1. Order-Specifc Check: Check if THIS order was already reviewed
+      isReviewed = product.reviews.find(
+        (rev) => rev.user.toString() === req.user._id.toString() && rev.order && rev.order.toString() === orderId.toString()
+      );
+    } else {
+      // 2. Generic Check (Legacy/Dashboard): Check if user EVER reviewed it (without an order ID)
+      // Note: If we want to allow Dashboard reviews to capture "any" previous review, we can just find the first one.
+      // But for now, let's keep it simple: If no orderId (generic review), we update the user's *latest* review or create new if none.
+      // Actually, safest fallback is: Find any review by this user.
+      isReviewed = product.reviews.find(
+        (rev) => rev.user.toString() === req.user._id.toString()
+      );
+    }
 
     if (isReviewed) {
-      console.log("User already reviewed, updating...");
+      console.log("Review exists, updating...");
       product.reviews.forEach((rev) => {
-        if (rev.user.toString() === req.user._id.toString()) {
+        // Update condition matches the Find condition above
+        const matchesOrder = orderId ? (rev.order && rev.order.toString() === orderId.toString()) : true;
+
+        if (rev.user.toString() === req.user._id.toString() && matchesOrder) {
           rev.rating = rating;
           rev.comment = comment;
+          // If upgrading a legacy review to an order-linked review (unlikely but possible if logic changes), we could set rev.order here.
+          // holding off on that to avoid side effects.
         }
       });
     } else {

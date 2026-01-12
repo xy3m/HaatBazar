@@ -107,6 +107,11 @@ const productSchema = new mongoose.Schema({
         ref: 'User',
         required: true
       },
+      order: {
+        type: mongoose.Schema.ObjectId,
+        ref: 'Order',
+        required: false
+      },
       name: {
         type: String,
         required: true

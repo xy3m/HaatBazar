@@ -111,17 +111,17 @@ export default function Profile() {
                     </div>
 
 
-                    {/* Mobile/Desktop Action Buttons */}
-                    <div className="flex flex-col sm:flex-row gap-3 mt-4 sm:mt-0 sm:ml-auto">
+                    {/* Mobile Only: Vendor Actions (Desktop has these in Navbar) */}
+                    <div className="flex flex-col gap-3 mt-4 sm:hidden">
                       {user?.role === 'vendor' ? (
                         <Link to="/vendor/dashboard">
-                          <GlowButton className="whitespace-nowrap">
+                          <GlowButton className="whitespace-nowrap w-full">
                             Vendor Console
                           </GlowButton>
                         </Link>
                       ) : user?.role !== 'admin' && (
                         <Link to="/vendor/apply">
-                          <GlowButton variant="secondary" className="whitespace-nowrap">
+                          <GlowButton variant="secondary" className="whitespace-nowrap w-full">
                             Become a Vendor
                           </GlowButton>
                         </Link>

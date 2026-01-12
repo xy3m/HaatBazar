@@ -5,7 +5,7 @@ import axios from '../api/axios';
 import { toast } from 'react-hot-toast';
 import GlowButton from './ui/GlowButton';
 
-export default function SubmitReviewModal({ isOpen, onClose, productId, productName, onReviewSubmitted }) {
+export default function SubmitReviewModal({ isOpen, onClose, productId, orderId, productName, onReviewSubmitted }) {
     const [rating, setRating] = useState(0);
     const [comment, setComment] = useState('');
     const [hoverRating, setHoverRating] = useState(0);
@@ -26,6 +26,7 @@ export default function SubmitReviewModal({ isOpen, onClose, productId, productN
         try {
             await axios.put('/products/review', {
                 productId,
+                orderId, // Pass orderId to backend
                 rating,
                 comment
             });
@@ -50,7 +51,7 @@ export default function SubmitReviewModal({ isOpen, onClose, productId, productN
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+                    className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
                     onClick={onClose}
                 >
                     <motion.div
@@ -58,18 +59,18 @@ export default function SubmitReviewModal({ isOpen, onClose, productId, productN
                         animate={{ scale: 1, opacity: 1, y: 0 }}
                         exit={{ scale: 0.9, opacity: 0, y: 20 }}
                         transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                        className="glass-card w-full max-w-lg shadow-2xl overflow-hidden bg-white/95"
+                        className="w-full max-w-lg bg-[#1C1C1E] border border-white/10 rounded-3xl shadow-2xl overflow-hidden"
                         onClick={(e) => e.stopPropagation()}
                     >
                         {/* Header */}
-                        <div className="flex items-center justify-between p-6 border-b border-slate-100 bg-white/50 backdrop-blur-sm">
+                        <div className="flex items-center justify-between p-6 border-b border-white/10 bg-white/5">
                             <div>
-                                <h2 className="text-xl font-bold text-slate-800">Write a Review</h2>
-                                <p className="text-sm text-gray-500 mt-1">for <span className="font-semibold text-teal-700">{productName}</span></p>
+                                <h2 className="text-xl font-bold text-white">Write a Review</h2>
+                                <p className="text-sm text-gray-400 mt-1">for <span className="font-semibold text-blue-400">{productName}</span></p>
                             </div>
                             <button
                                 onClick={onClose}
-                                className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-full transition-colors"
+                                className="p-2 text-gray-500 hover:text-white hover:bg-white/10 rounded-full transition-colors"
                             >
                                 <FaTimes size={20} />
                             </button>
@@ -77,11 +78,11 @@ export default function SubmitReviewModal({ isOpen, onClose, productId, productN
 
                         {/* Content */}
                         <div className="p-6">
-                            <form onSubmit={handleSubmit} className="space-y-6">
+                            <form onSubmit={handleSubmit} className="space-y-8">
 
                                 {/* Star Rating */}
-                                <div className="flex flex-col items-center gap-2">
-                                    <label className="text-sm font-semibold text-slate-600 text-center">How would you rate this product?</label>
+                                <div className="flex flex-col items-center gap-3">
+                                    <label className="text-sm font-bold text-gray-400 uppercase tracking-widest text-center">How would you rate this product?</label>
                                     <div className="flex gap-2">
                                         {[1, 2, 3, 4, 5].map((star) => (
                                             <motion.button
@@ -95,14 +96,14 @@ export default function SubmitReviewModal({ isOpen, onClose, productId, productN
                                                 onClick={() => setRating(star)}
                                             >
                                                 <FaStar
-                                                    size={32}
-                                                    className={`transition-colors duration-200 ${star <= (hoverRating || rating) ? "text-yellow-400 drop-shadow-sm" : "text-gray-200"
+                                                    size={36}
+                                                    className={`transition-colors duration-200 ${star <= (hoverRating || rating) ? "text-yellow-400 drop-shadow-[0_0_10px_rgba(250,204,21,0.5)]" : "text-gray-700"
                                                         }`}
                                                 />
                                             </motion.button>
                                         ))}
                                     </div>
-                                    <p className="text-xs font-medium text-teal-600 h-4 transition-all duration-300">
+                                    <p className="text-xs font-medium text-blue-400 h-4 transition-all duration-300">
                                         {rating === 1 && "Poor"}
                                         {rating === 2 && "Fair"}
                                         {rating === 3 && "Good"}
@@ -113,12 +114,12 @@ export default function SubmitReviewModal({ isOpen, onClose, productId, productN
 
                                 {/* Comment */}
                                 <div>
-                                    <label className="block text-sm font-semibold text-slate-700 mb-2">Your Review</label>
+                                    <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Your Review</label>
                                     <textarea
                                         value={comment}
                                         onChange={(e) => setComment(e.target.value)}
                                         placeholder="Share your thoughts on this product..."
-                                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all min-h-[120px] resize-none"
+                                        className="w-full px-4 py-3 bg-black/50 border border-white/10 rounded-xl focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all min-h-[120px] resize-none text-white placeholder:text-gray-600"
                                     />
                                 </div>
 
@@ -128,14 +129,14 @@ export default function SubmitReviewModal({ isOpen, onClose, productId, productN
                                         type="button"
                                         onClick={onClose}
                                         disabled={submitting}
-                                        className="px-5 py-2.5 rounded-xl font-medium text-slate-600 hover:bg-slate-100 transition-colors"
+                                        className="px-5 py-2.5 rounded-xl font-bold text-sm text-gray-400 hover:text-white hover:bg-white/5 transition-colors"
                                     >
                                         Cancel
                                     </button>
                                     <GlowButton
                                         type="submit"
                                         disabled={submitting}
-                                        className="!py-2.5 !px-6"
+                                        className="!py-2.5 !px-8"
                                     >
                                         {submitting ? 'Submitting...' : 'Submit Review'}
                                     </GlowButton>

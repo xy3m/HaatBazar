@@ -111,20 +111,45 @@ exports.myOrders = catchAsyncErrors(async (req, res, next) => {
   // 2. Fetch products with reviews (only necessary fields)
   const products = await Product.find({ _id: { $in: productIds } }).select('reviews');
 
-  // 3. Create a lookup map: productId -> userHasReviewed (boolean)
+  // 3. Create a lookups: productId -> Set of reviewed Order IDs by this user
   const reviewMap = {};
   products.forEach(product => {
-    const hasReviewed = product.reviews.some(
+    // Filter reviews by this user
+    const userReviews = product.reviews.filter(
       review => review.user.toString() === req.user._id.toString()
     );
-    reviewMap[product._id.toString()] = hasReviewed;
+
+    // Create a Set of Order IDs this user has reviewed for this product
+    const reviewedOrderIds = new Set();
+    userReviews.forEach(rev => {
+      if (rev.order) {
+        reviewedOrderIds.add(rev.order.toString());
+      }
+    });
+
+    reviewMap[product._id.toString()] = {
+      hasGenericReview: userReviews.length > 0, // Fallback if needed
+      reviewedOrders: reviewedOrderIds
+    };
   });
 
   // 4. Attach isReviewed flag to each order item
   orders.forEach(order => {
     order.orderItems.forEach(item => {
-      // Default to false if product not found (e.g. deleted)
-      item.isReviewed = reviewMap[item.product.toString()] || false;
+      const prodId = item.product.toString();
+      const productData = reviewMap[prodId];
+
+      if (!productData) {
+        item.isReviewed = false;
+      } else {
+        // Strict check: Is THIS order ID in the reviewed set?
+        // Note: For legacy support, if we have a generic review (no orderId), should we count it?
+        // The user wants separate instances. So strictly checking Order ID is better for NEW reviews.
+        // But for OLD reviews, they won't match.
+        // Compromise: If check matches strict Order ID -> True.
+
+        item.isReviewed = productData.reviewedOrders.has(order._id.toString());
+      }
     });
   });
 

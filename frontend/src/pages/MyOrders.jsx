@@ -13,22 +13,23 @@ export default function MyOrders() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submitModalOpen, setSubmitModalOpen] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState({ id: null, name: '' });
+  const [selectedProduct, setSelectedProduct] = useState({ id: null, name: '', orderId: null });
+
+  const fetchOrders = async () => {
+    // Only show loading spinner on initial load to prevent flashing
+    if (orders.length === 0) setLoading(true);
+
+    try {
+      const { data } = await axios.get('/orders/me');
+      setOrders(data.orders);
+    } catch (err) {
+      // Silent fail
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchOrders = async () => {
-      const minLoadTime = new Promise(resolve => setTimeout(resolve, 800));
-      const request = axios.get('/orders/me');
-
-      try {
-        const [_, { data }] = await Promise.all([minLoadTime, request]);
-        setOrders(data.orders);
-      } catch (err) {
-        // Silent fail
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchOrders();
   }, []);
 
@@ -140,7 +141,7 @@ export default function MyOrders() {
                               !item.isReviewed ? (
                                 <button
                                   onClick={() => {
-                                    setSelectedProduct({ id: item.product, name: item.name });
+                                    setSelectedProduct({ id: item.product, name: item.name, orderId: order._id });
                                     setSubmitModalOpen(true);
                                   }}
                                   className="w-full sm:w-auto px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider text-white border border-white/10 hover:bg-white hover:text-black transition-all whitespace-nowrap"
@@ -166,7 +167,9 @@ export default function MyOrders() {
             isOpen={submitModalOpen}
             onClose={() => setSubmitModalOpen(false)}
             productId={selectedProduct.id}
+            orderId={selectedProduct.orderId}
             productName={selectedProduct.name}
+            onReviewSubmitted={fetchOrders}
           />
         </div>
       </div>
