@@ -131,7 +131,7 @@ export default function VendorApplication() {
 
   return (
     <PageTransition>
-      <div className="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8 pt-28">
+      <div className="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8 pt-40">
         <div className="flex items-center gap-3 mb-8">
           <div className="bg-gradient-to-br from-emerald-500 to-teal-600 p-3 rounded-2xl shadow-lg shadow-emerald-500/20">
             <FaStoreAlt className="text-white text-xl" />
@@ -142,7 +142,7 @@ export default function VendorApplication() {
           </div>
         </div>
 
-        <GlassCard className="p-6 sm:p-10 bg-white/80 border-white/40 shadow-xl">
+        <GlassCard className="p-6 sm:p-10 bg-black/60 border-white/10 shadow-xl">
           <form onSubmit={handleSubmit} className="space-y-6">
             <motion.div
               variants={containerVariants}
@@ -153,7 +153,7 @@ export default function VendorApplication() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Business Name */}
                 <motion.div variants={itemVariants}>
-                  <label className="block text-sm font-bold text-black mb-2">Business Name <span className="text-rose-500">*</span></label>
+                  <label className="block text-sm font-bold text-white mb-2">Business Name <span className="text-rose-500">*</span></label>
                   <div className="relative">
                     <FaStore className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
                     <input
@@ -170,7 +170,7 @@ export default function VendorApplication() {
 
                 {/* Business Type */}
                 <motion.div variants={itemVariants}>
-                  <label className="block text-sm font-bold text-black mb-2">Business Type <span className="text-rose-500">*</span></label>
+                  <label className="block text-sm font-bold text-white mb-2">Business Type <span className="text-rose-500">*</span></label>
                   <div className="relative">
                     <FaBriefcase className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
                     <select
@@ -193,7 +193,7 @@ export default function VendorApplication() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Tax ID */}
                 <motion.div variants={itemVariants}>
-                  <label className="block text-sm font-bold text-black mb-2">BIN (Tax ID) <span className="text-rose-500">*</span></label>
+                  <label className="block text-sm font-bold text-white mb-2">BIN (Tax ID) <span className="text-rose-500">*</span></label>
                   <div className="relative">
                     <FaIdCard className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
                     <input
@@ -211,7 +211,7 @@ export default function VendorApplication() {
 
                 {/* Contact Phone */}
                 <motion.div variants={itemVariants}>
-                  <label className="block text-sm font-bold text-black mb-2">Contact Phone <span className="text-rose-500">*</span></label>
+                  <label className="block text-sm font-bold text-white mb-2">Contact Phone <span className="text-rose-500">*</span></label>
                   <div className="relative">
                     <FaPhone className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
                     <input
@@ -229,7 +229,7 @@ export default function VendorApplication() {
 
               {/* Business Address */}
               <motion.div variants={itemVariants}>
-                <label className="block text-sm font-bold text-black mb-2">Business Address <span className="text-rose-500">*</span></label>
+                <label className="block text-sm font-bold text-white mb-2">Business Address <span className="text-rose-500">*</span></label>
                 <div className="relative">
                   <FaMapMarkerAlt className="absolute left-4 top-4 text-slate-400" />
                   <textarea
@@ -246,7 +246,7 @@ export default function VendorApplication() {
 
               {/* Description */}
               <motion.div variants={itemVariants}>
-                <label className="block text-sm font-bold text-black mb-2">Business Description <span className="text-rose-500">*</span></label>
+                <label className="block text-sm font-bold text-white mb-2">Business Description <span className="text-rose-500">*</span></label>
                 <div className="relative">
                   <FaFileAlt className="absolute left-4 top-4 text-slate-400" />
                   <textarea
