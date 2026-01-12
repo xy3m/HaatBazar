@@ -69,7 +69,7 @@ export default function Dashboard() {
             <h1 className="text-4xl font-bold tracking-tight text-white mb-2">Store</h1>
             <p className="text-gray-500">The best new arrivals, curated for you.</p>
           </div>
-          <div className="flex gap-4 overflow-x-auto pb-2 pt-2 scrollbar-hide md:pb-0">
+          <div className="flex flex-wrap gap-3 justify-start md:justify-end">
             {categories.map(cat => (
               <Link
                 key={cat.name}
